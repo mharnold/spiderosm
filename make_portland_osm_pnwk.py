@@ -53,7 +53,7 @@ def setup_paths(gis_data_dir, out_dir):
     #OSM DATA
     # geofabrik extracts updated daily
     paths['osm_url'] ='http://download.geofabrik.de/north-america/us/oregon-latest.osm.pbf'
-    paths['osm'] = os.path.join(gis_data_dir, 'osm', 'oregon-latest.osm.pbf')
+    paths['osm'] = os.path.join(gis_data_dir, 'osm', 'geofabrik.de', 'oregon-latest.osm.pbf')
     paths['osm_network'] = os.path.join(out_dir,'osm') # .pnwk.geojson
 
 def doit():
