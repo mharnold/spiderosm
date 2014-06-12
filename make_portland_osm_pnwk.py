@@ -11,16 +11,15 @@ import centerline
 import config
 import geo
 import misc
-import shp2geojson
 import osm
 import pnwk
+#import postgis
 import spatialite
 
 # CONFIG
 # can be overwritten in config.spiderosm.py files
 def setup():
     conf = config.settings
-
     conf['project'] = 'portland'
     #NAD_1983_HARN_StatePlane_Oregon_North_FIPS_3601_Feet_Intl
     #http://spatialreference.org/ref/sr-org/6856/
@@ -35,17 +34,9 @@ def setup():
     #scott_bbox = (7659144.46916011, 652983.6364829391, 7704883.335301831, 711749.7037401646)
     #conf['project_bbox'] = geo.buffer_box(scott_bbox,5280) # buffer by 1 mi
 
-    #database
-    # if not set toFalse, write results (and intermediate files) to this database
-    #conf['db'] = False
-    #conf['db'] = postgis.Pgis(conf['project'])
-    conf['db'] = spatialite.Slite(os.path.join('data','portland','portland.sqlite'))
-
     config.read_config_files()
-
     conf['project_projection'] = geo.Projection(conf['project_proj4text'])
     setup_paths(conf['gis_data_dir'],conf['out_dir'])
-
     print 'project_bbox:', conf['project_bbox']
 
 paths = {}
@@ -58,12 +49,18 @@ def setup_paths(gis_data_dir, out_dir):
 
 def doit():
     conf = config.settings
-
     setup()
     log('TOP')
 
     # OUTPUT DIR
     if not os.path.exists(conf['out_dir']): os.makedirs(conf['out_dir'])
+
+    #DATABASE
+    # if set write results (and intermediate files) to this database
+    global db
+    #db=False
+    #db = postgis.Pgis(conf['project'])
+    db = spatialite.Slite(os.path.join(conf['out_dir'], conf['project'] + '.sqlite'))
 
     misc.update_file_from_url(filename=paths['osm'], url=paths['osm_url'])
     build_osm_network(clip_rect=conf['project_bbox'],target_proj=conf['project_proj4text'])
@@ -77,7 +74,6 @@ def log(msg):
 
 def build_osm_network(clip_rect=None,target_proj=None):
     conf = config.settings
-    db = conf['db']
 
     log('building OSM network...')
     osm_data = osm.OSMData(paths['osm'], clip_rect=clip_rect, target_proj=target_proj)

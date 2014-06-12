@@ -18,7 +18,7 @@ import geoutils
 import misc
 import osm
 import pnwk
-import postgis
+#import postgis
 import shp2geojson
 #import spatialite
 
@@ -33,10 +33,7 @@ def setup():
     conf['out_dir'] = os.path.join('data','berkeley')
 
     #database
-    # if not set toFalse, write results (and intermediate files) to this database
     conf['db'] = False
-    #conf['db'] = postgis.Pgis(conf['project'])
-    #conf['db'] : spatialite.Slite(os.path.join('data','berkeley','berkeley.sqlite'))
 
     config.read_config_files()
 
@@ -70,12 +67,19 @@ def match_berkeley():
     # OUTPUT DIR
     if not os.path.exists(conf['out_dir']): os.makedirs(conf['out_dir'])
 
+    #DATABASE
+    # if set write results (and intermediate files) to this database
+    global db
+    db=False
+    #db = postgis.Pgis(conf['project'])
+    #db = spatialite.Slite(os.path.join(out_dir, conf['project'] + '.sqlite'))
+
     # CITY 
-    if False: 
+    if True: 
         build_city_network()
     
     # OSM
-    if False:
+    if True:
         # DOWNLOAD UP-TO-DATE OSM DATA
         misc.update_file_from_url(filename=paths['osm'],url=paths['osm_url'])
 
@@ -91,7 +95,7 @@ def match_berkeley():
         build_osm_network(clip_rect=city_bbox_buffered,target_proj=conf['project_proj4text'])
 
     # MATCH
-    if False:
+    if True:
         if not city_nwk:
             city_nwk = pnwk.PNwk(name='city',filename=paths['city_network'],units='meters')
         if not osm_nwk: 
@@ -110,9 +114,6 @@ def log(msg):
     print now,conf['project'],msg
 
 def build_city_network():
-    conf = config.settings
-    db = conf['db']
-
     # CENTERLINE 
     log('building city centerline network...')
     #print prjinfo.prjinfo(city_shp_filename) need .prj extenion.
@@ -126,9 +127,6 @@ def build_city_network():
     log('building city centerline network... DONE')
 
 def build_osm_network(clip_rect=None,target_proj=None):
-    conf = config.settings
-    db = conf['db']
-
     log('building OSM network...')
     osm_data = osm.OSMData(paths['osm'], clip_rect=clip_rect, target_proj=target_proj)
     osm_data.write_geojson(paths['osm_network']) # .osm.geojson
@@ -143,7 +141,6 @@ def build_osm_network(clip_rect=None,target_proj=None):
 
 def match_networks(pnwk1, pnwk2):
     conf = config.settings
-    db = conf['db']
 
     log('matching %s and %s networks...' % (pnwk1.name, pnwk2.name))
     pnwk1.match(pnwk2)
@@ -158,7 +155,6 @@ def match_networks(pnwk1, pnwk2):
 
 def mismatched_names_report():
     conf = config.settings
-    db = conf['db']
 
     def mismatchFunc(feature,props):
         if props.get('match$score',0)<50: return False

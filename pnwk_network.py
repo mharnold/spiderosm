@@ -1,7 +1,10 @@
 '''
 Network base for Path Network
 '''
+
+import os
 import pdb
+import tempfile
 
 import geojson
 
@@ -394,7 +397,8 @@ def testGeoInterface():
     assert geo['properties']['g_pnwk$fromJctId'] == 10
 
 def testReadWrite():
-    fname = 'spiderosm_pnwk_network_test'
+    tmpDir = tempfile.gettempdir()
+    fname = os.path.join(tmpDir,'spiderosm_pnwk_network_test')
     fname2 = fname +'2'
     g = testSetupG()
     seg = g.segs[1]
@@ -420,6 +424,10 @@ def testReadWrite():
     assert seg.fromJct.jctId == 10
     assert seg.toJct.jctId == 11
     g3.check()
+
+    # cleanup
+    if os.path.exists(fname): os.remove(fname)
+    if os.path.exists(fname2): os.remove(fname2)
 
 def testGetJctsNearPoint():
     g = testSetupG()

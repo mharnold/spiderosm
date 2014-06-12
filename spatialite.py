@@ -2,7 +2,9 @@
 interface to spatialite
 '''
 
+import os
 import pdb
+import tempfile
 
 import pyspatialite
 import pyspatialite.dbapi2 
@@ -42,15 +44,16 @@ def dict_factory(cursor, row):
         d[col[0]] = row[idx]
     return d
 
-# on module load
-def doit():
-    # requires preexisting spaitially enabled 'test' database:
-    # %createdb test
-    db = Slite('spiderosm_test.sqlite')
-   
-    # run tests
+def test():
+    f = tempfile.NamedTemporaryFile(suffix='.sqlite',delete=False)
+    fname = f.name
+    print 'fname',fname
+    f.close()
+
+    db = Slite(fname)
     db.test(verbose=False)
+    if os.path.exists(fname): os.remove(fname)
+    print "spatialite test PASS"
 
-#doit
-doit()
-
+if __name__ == "__main__":
+    test()
