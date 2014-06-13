@@ -49,6 +49,10 @@ def unzip(Filename):
     for name in zfile.namelist():
         (subDir, filename) = os.path.split(name)
         dirname = os.path.join(zipDir,subDir)
+        # paranoid about escaping from current dir with '..'
+        assert not '..' in dirname
+        assert not '//' in dirname
+        assert not '\\' in dirname
         if dirname=='': dirname='.'
         print "Decompressing " + filename + " on " + dirname
         if not os.path.exists(dirname):
