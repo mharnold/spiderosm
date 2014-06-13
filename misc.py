@@ -6,6 +6,7 @@ import os
 import urllib
 import sys
 import time
+import zipfile
 
 # print immediately (no buffering)
 def print_now(s, noNewLine=False):
@@ -41,6 +42,18 @@ def update_file_from_url(filename,url):
     if file_size != url_size:
         print 'Downloading: %s to %s' % (url,filename)
         urllib.urlretrieve(url,filename)
+
+def unzip(Filename):
+    zfile = zipfile.ZipFile(Filename)
+    (zipDir,zipFile) = os.path.split(Filename)
+    for name in zfile.namelist():
+        (subDir, filename) = os.path.split(name)
+        dirname = os.path.join(zipDir,subDir)
+        if dirname=='': dirname='.'
+        print "Decompressing " + filename + " on " + dirname
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        zfile.extract(name, dirname)
 
 def test():
     print 'date_ymd:', date_ymd()

@@ -45,6 +45,8 @@ paths = {}
 def setup_paths(gis_data_dir, out_dir):
     #CITY DATA
     # source: http://www.ci.berkeley.ca.us/datacatalog/
+    paths['city_url'] = 'http://www.ci.berkeley.ca.us/uploadedFiles/IT/GIS/streets.zip'
+    paths['city_zip'] = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.zip')
     paths['city_shp'] = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.shp')
     paths['city_geojson'] = os.path.join(out_dir,'streets.geojson')
     paths['city_network'] = os.path.join(out_dir,'city') # .pnwk.geojson
@@ -76,6 +78,10 @@ def match_berkeley():
 
     # CITY 
     if True: 
+        # DOWNLOAD BERKELEY CITY DATA
+        misc.update_file_from_url(filename=paths['city_zip'],url=paths['city_url'])
+        misc.unzip(paths['city_zip'])
+
         build_city_network()
     
     # OSM
