@@ -97,7 +97,7 @@ class Spoke(object):
             if spoke.seg.match: continue
             len2 = spoke.length()
 
-            if len1<len2:
+            if len1<=len2:
                 length = len1
                 d1=length
                 d2=spoke.project(self.end().point)

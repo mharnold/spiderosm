@@ -105,6 +105,7 @@ def berkeley_pnwk(features,name=None,props=None):
         first = words[0]
         if name=='TRAIL' and cat =='PEDESTRIAN': return names 
         if name=='RAMP' and cat == 'CONNECTOR': return names
+        if name=='ALLEY': return names
         if 'UNNAMED' in name: return names
         names.append(name)
 
