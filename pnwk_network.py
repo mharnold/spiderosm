@@ -9,14 +9,14 @@ import tempfile
 import geojson
 
 import bins
+import cannames
 import geo 
-import names as canNames
 import pnwk_namespace
 
 class PNwkNetwork(pnwk_namespace.PNwkNamespace):
     fileExtension = '.pnwk.geojson'
 
-    def __init__(self,name=None,filename=None, units=None):
+    def __init__(self,name=None,filename=None, units=None, quiet=False):
 
         #network name
         if not name:
@@ -56,7 +56,7 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         self.lastGenJctId = 0
 
         if filename:
-            self.readGeojson(filename)
+            self.readGeojson(filename, quiet=quiet)
       
     # qualifiedTags = tags with namespace prefixes.
     def addSeg(self, segId, fromJctId, toJctId, points, names=(), tags=None, qualifiedTags=None):
@@ -69,8 +69,8 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         # make names canonical to facilitate comparison between networks from different sources
         cans = set([])
         for name in names: 
-            canName = canNames.canonical_street_name(name)
-            if len(canName)>0: cans.add(canNames.canonical_street_name(name))
+            canName = cannames.canonical_street_name(name)
+            if len(canName)>0: cans.add(cannames.canonical_street_name(name))
 
         tags = self.addNamespace(tags,self.clientNameSpace)
         if qualifiedTags: tags.update(qualifiedTags)
@@ -202,8 +202,8 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
 
             self.addSeg(segId, fromJctId, toJctId, points, names=names, qualifiedTags=tags)
 
-    def readGeojson(self,filename): 
-        print 'DEBUG readGeojson filename:', filename
+    def readGeojson(self, filename, quiet=False): 
+        if not quiet: print 'Reading', filename
         f = open(filename+self.fileExtension,'r')
         geo = geojson.load(f)
         f.close()
@@ -223,7 +223,7 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
 
     def getJctsNearPoint(self, point, maxd=100):
         result = []
-        for point,jct in self.jctBins.inRadius(point,maxd):
+        for point,jct in self.jctBins.in_radius(point,maxd):
             result.append(jct)
         return result
 
@@ -404,7 +404,7 @@ def testReadWrite():
     seg = g.segs[1]
      
     g.writeGeojson(fname)
-    g2 = PNwkNetwork(name='g',filename=fname)
+    g2 = PNwkNetwork(name='g', filename=fname, quiet=True)
     assert len(g2.segs) == 1
     assert len(g2.jcts) == 2
     seg = g2.segs[1]
@@ -415,7 +415,7 @@ def testReadWrite():
     g2.check()
     
     g2.writeGeojson(fname2)
-    g3 = PNwkNetwork(name='g',filename=fname2)
+    g3 = PNwkNetwork(name='g', filename=fname2, quiet=True)
     assert len(g3.segs) == 1
     assert len(g3.jcts) == 2
     seg = g3.segs[1]
@@ -465,7 +465,7 @@ def test():
     testGetJctsNearPoint()
     testGetBBox()
 
-    print 'pnwk_network test PASSED'
+    print 'pnwk_network PASS'
 
 #doit
 test()

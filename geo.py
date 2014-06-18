@@ -45,7 +45,7 @@ class Projection(object):
                 # TODO other types. :)
                 assert False
 
-def test_projection():
+def _test_projection():
     proj = Projection('+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs')
     sf_geo = (-122.0,38.0)
     sf_utm = proj.project_point(sf_geo)
@@ -89,7 +89,7 @@ def shapely_point_to_point(shapely_point):
 def shapely_linestring_to_points(shapely_linestring):
     return list(shapely_linestring.coords) 
 
-def test_shapely():
+def _test_shapely():
     p = (5,6.5)
     sp = shapely_point(p)
     pout = shapely_point_to_point(sp)
@@ -114,7 +114,7 @@ def distance(p0,p1):
 	deltay= p1[1] - p0[1]
 	return abs(complex(deltax,deltay))
 
-def test_distance():
+def _test_distance():
 	assert distance((5,0),(15,0)) == 10
 	assert distance((1,2),(4,6)) == 5
 
@@ -126,7 +126,7 @@ def length(points):
         prev = point
     return d
 
-def test_length():
+def _test_length():
     assert length([]) == 0
     assert length([(5,10)]) == 0
     assert length([(0,0),(0,1)]) == 1
@@ -138,7 +138,7 @@ def interpolate(points,d):
     spoint = sls.interpolate(d)
     return shapely_point_to_point(spoint)
 
-def test_interpolate():
+def _test_interpolate():
     ls = [(0,0),(0,10),(10,10),(10,0),(0,0)]
     assert interpolate(ls, 5) == (0.0,5.0)
     assert interpolate(ls, 20) == (10.0,10.0)
@@ -187,7 +187,7 @@ def divergence(points1,points2):
     #print 'num_b', num_b
     return (maxSep, (cum_bdelta+0.0)/num_b)
 
-def test_divergence():
+def _test_divergence():
     points1 = [(0,10),(100,15),(200,10)]
     points2 = [(0,-10),(100,-15),(200,-10)]
     points3 = [(0,0),(200,0)]
@@ -207,7 +207,7 @@ def project(points,point):
     sp = shapely_point(point)
     return sls.project(sp)
 
-def test_project():
+def _test_project():
     ls = [(0,0),(0,10),(10,10),(10,0),(0,0)]
     assert project(ls,(1,5)) == 5.0
     assert project(ls,(11,11)) == 20.0
@@ -236,7 +236,7 @@ def cut(points,d):
 
     return part1,part2
 
-def test_cut():
+def _test_cut():
     points = [(0,1),(10,1),(20,1),(30,1)]
     part1,part2 = cut(points,5.0)
     #print 'part1:', part1
@@ -252,7 +252,7 @@ def point_in_rect_q(point, rect):
     x0,y0,x1,y1 = rect
     return x0<=px<x1 and y0<=py<y1
 
-def test_point_in_rect_q():
+def _test_point_in_rect_q():
     assert point_in_rect_q((1,2),(0,0,10,10))
     assert not point_in_rect_q((100,2),(0,0,10,10))
 
@@ -262,7 +262,7 @@ def points_intersect_rect_q(points, rect):
         if point_in_rect_q(point, rect): return True
     return False
 
-def test_points_intersect_rect_q():
+def _test_points_intersect_rect_q():
     assert not points_intersect_rect_q([(100,1),(200,2),(300,3)], (0,0,10,10)) 
     assert points_intersect_rect_q([(100,1),(2,2),(300,3)], (0,0,10,10)) 
 
@@ -281,7 +281,7 @@ def compass_bearing_delta(bearing0, bearing1):
     #print 'cbd:', bearing0, bearing1, delta
     return delta
 
-def test_compass_bearing():
+def _test_compass_bearing():
 	cb=compass_bearing
 	assert cb((0,0),(0,1)) == 0
 	assert cb((0,0),(10,0)) == 90
@@ -289,7 +289,7 @@ def test_compass_bearing():
 	assert cb((0,1),(-11,1)) == 270
 	assert cb((5,10),(5,20)) == 0
 
-def test_compass_bearing_delta():
+def _test_compass_bearing_delta():
     bd= compass_bearing_delta
     assert bd(350,10) == 20
     assert bd(10,350) == 20
@@ -311,7 +311,7 @@ class BBox(object):
             x0,y0,x1,y1 = self.box
             self.box = (min(x0,x),min(y0,y),max(x1,x),max(y1,y))
 
-def test_BBox():
+def _test_BBox():
     bb = BBox()
     assert bb.rect() == None
     bb.add_point((10,100))
@@ -319,13 +319,13 @@ def test_BBox():
     bb.add_point((-5,120))
     assert bb.rect() == (-5, 100, 10, 120)
 
-def test_linestring_to_points():
+def _test_linestring_to_points():
     ls = 'LINESTRING(1.1,10.0 2.2, 20.0)'
     points = wkt_linestring_to_points(ls)
     assert len(points) == 2
     assert points[1][0] == 2.2 and points[1][1] == 20.0
 
-def test_linestring_conversions():
+def _test_linestring_conversions():
     wkt_in = "LINESTRING(7696992.83333333 682678.163713917,7696997.45603675 682808.892060369)"
     print 'wkt_in:', wkt_in
     points = wkt_linestring_to_points(wkt_in)
@@ -335,20 +335,20 @@ def test_linestring_conversions():
 
 def test():
         #test_linestring_to_points()
-        test_projection()
-	test_distance()
-        test_length()
-        test_divergence()
-	test_compass_bearing()
-        test_compass_bearing_delta()
-        test_point_in_rect_q()
-        test_points_intersect_rect_q()
-        test_BBox()
-        test_shapely()
-        test_interpolate()
-        #test_project()
-        test_cut()
-	print 'geo test PASSED'
+        _test_projection()
+	_test_distance()
+        _test_length()
+        _test_divergence()
+	_test_compass_bearing()
+        _test_compass_bearing_delta()
+        _test_point_in_rect_q()
+        _test_points_intersect_rect_q()
+        _test_BBox()
+        _test_shapely()
+        _test_interpolate()
+        #_test_project()
+        _test_cut()
+	print 'geo PASS'
 
 #doit
 test()

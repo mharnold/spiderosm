@@ -4,7 +4,6 @@ Path Network - Matcher
 import pdb
 
 import geo 
-import names as canNames
 import pnwk_matchspokes
 
 class PNwkMatch(pnwk_matchspokes.PNwkMatchSpokes):

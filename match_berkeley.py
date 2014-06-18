@@ -14,7 +14,7 @@ import centerline
 import config
 import csvif
 import geo
-import geoutils
+import geofeatures
 import misc
 import osm
 import pnwk
@@ -73,7 +73,7 @@ def match_berkeley():
     # if set write results (and intermediate files) to this database
     global db
     db=False
-    #db = postgis.Pgis(conf['project'])
+    #db = postgis.PGIS(conf['project'])
     #db = spatialite.Slite(os.path.join(out_dir, conf['project'] + '.sqlite'))
 
     # CITY 
@@ -179,7 +179,9 @@ def mismatched_names_report():
             units = 'meters')
 
     # find mismatches
-    mismatches = geoutils.filterFeatures(osm_matched, featureFunc=mismatchFunc, geomType='LineString')
+    mismatches = geofeatures.filter_features(osm_matched, 
+            feature_func=mismatchFunc, 
+            geom_type='LineString')
     print '%d (RAW) NAME MISMATCHES' % len(mismatches)
 
     # filter props down for webmap
@@ -189,7 +191,7 @@ def mismatched_names_report():
             ('wayId', 'BIGINT', 'osm$wayId'),
             ('fixme', 'TEXT', 'osm$fixme:name')
             ]
-    webmap = geoutils.filterFeatures(mismatches, colSpecs=webmap_specs)
+    webmap = geofeatures.filterFeatures(mismatches, colSpecs=webmap_specs)
 
     # htlml quote TEXT property values to guard against injection attacks.
     for feature in webmap:
@@ -235,7 +237,7 @@ def mismatched_names_report():
             ]
 
     csvif.write(unique, os.path.join(conf['out_dir'],'name_mismatches.csv'), 
-            colSpecs=csv_specs,
+            col_specs=csv_specs,
             title=title)
 
     log('generating mismatched name report. DONE.')

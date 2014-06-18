@@ -135,6 +135,10 @@ def canonical_street_name(name):
                 new_words.append(words[i+1])
                 skip=True
                 continue
+            if words[i] == 'MC':
+                new_words.append('MC' + words[i+1])
+                skip=True
+                continue
             new_words.append(words[i])
         words = new_words
 
@@ -166,6 +170,7 @@ def test():
         test_can("BLAZER TRL","BLAZER TRAIL")
         test_can("HWY 30","US 30")
         test_can("MARTIN LUTHER KING  JUNIOR BLVD","MARTIN LUTHER KING JR BLVD")
+        test_can("Mc Gee Street", "McGee Street")
 
         # cases below are now to be handled by 'fuzzy matching' (edit distance)
         assert match_score(['A St'],['B Street']) == 75.0
@@ -174,6 +179,6 @@ def test():
         #test_can("S BERGIS RD", "BERGIS RD")
         #test_can("PORTLAND BLVD CT", "PORTLAND BL CT")
 
-	print 'names test PASS.'
+	print 'cannames PASS.'
 #doit
 test()

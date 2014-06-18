@@ -1,84 +1,19 @@
 import geojson
 
+import colspecs
 import geo
 
-#TODO not sure where this should live?
-def gen_col_specs(geo, geometry_type=None):
-    geo_type_table = {'LineString':'LINESTRING', 'Point':'POINT'}
-    type_name = { int:'INT', float:'FLOAT', basestring:'TEXT'}
-    type_rank = { int:1, float:2, basestring:3 }
-
-    def make_bigint_specs(specs, features, geometry_type):
-        for (prop,type_name) in specs.items():
-            if type_name != 'INT': continue
-            for feature in features:
-                if feature['geometry']['type'] != geometry_type: continue
-                if abs(feature['properties'].get(prop,0)) > 2**30: 
-                    specs[prop] = 'BIGINT'
-                    break
-
-    if not geometry_type: geometry_type = geo['features'][0]['geometry']['type']
-    specs = {}
-    specs_rank = {}
-    features = geo['features']
-
-    # auto create 'col types' based on python types of values
-    # if attribute values not of same type, promote based on type_rank
-    for feature in features:
-        if feature['geometry']['type'] != geometry_type: continue
-        for (prop,value) in feature['properties'].items():
-            if value==None: continue
-            t = type(value)
-            if isinstance(value,basestring): t = basestring # includes unicode strings.
-            if t not in type_rank: t = basestring # anything weird goes to TEXT.
-            if specs_rank.get(prop,0) >= type_rank[t]: continue        
-            specs[prop] = type_name[t]
-            specs_rank[prop] = type_rank[t]
-
-    # promote 'INT' attributes with large values to 'BIGINT'
-    make_bigint_specs(specs, features, geometry_type)
-    col_specs = sorted(specs.items())
-    
-    # add geometry as last column
-    col_specs.append(('geometry', geo_type_table[geometry_type]))
-    
-    return col_specs
-
-# uniquifies col names to avoid collisions due to case-insenstivity, and fills out prop_names
-def fix_col_specs(col_specs):
-    def suffix (i): 
-        if i==0: return ''
-        return '$%d' % i
-    lc_names = {}
-    new_col_specs = []
-    for col_spec in col_specs:
-        col_name = col_spec[0]
-        if len(col_spec) >= 2:
-            col_type = col_spec[1]
-        else:
-            col_type = 'TEXT'
-        if len(col_spec) >=3:
-            prop_name = cols_spec[2]
-        else:
-            prop_name = col_name
-
-        i=0
-        while col_name.lower() + suffix(i) in lc_names: i += 1
-        lc_names[col_name.lower() + suffix(i)] = True 
-        new_col_specs.append((col_name + suffix(i), col_type, prop_name))
-        
-    return new_col_specs
 
 class DatabaseInterface(object):
     ''' Base class for postgis, and spatiallite database interfaces'''
 
-    def __init__(self,db_name, srid=None):
+    def __init__(self,db_name, srid=None, verbose=True):
         #global db_name, con, cur, con_autocommit, cur_autocommit
 
         self.db_name = db_name
         if not srid:  srid = 4326 # default to WGS84 longlat
         self.srid = srid
-        print 'db init:','Connecting to database %s' % db_name
+        if verbose: print 'Connecting to database %s' % db_name
         (self.con, self.cur) = self._connect()
         self._add_spatial_extension()
 
@@ -157,7 +92,7 @@ class DatabaseInterface(object):
         #self._create_spatial_index(table,name)
                                 
     def create_table(self, table, col_specs):
-        col_specs = fix_col_specs(col_specs)
+        col_specs = colspecs.fix(col_specs)
         self.exec_sql('DROP TABLE IF EXISTS %s' % table)
 
         data_specs = []  
@@ -178,7 +113,7 @@ class DatabaseInterface(object):
 
     def write_row(self, table, col_specs, row, srid=None):
         if not srid: srid=self.srid
-        col_specs = fix_col_specs(col_specs)
+        col_specs = colspecs.fix(col_specs)
 
         def code_value(col_name, col_type, value, ref):
             if col_type == 'POINT':
@@ -241,7 +176,7 @@ class DatabaseInterface(object):
         try: geo = geo.__geo_interface__
         except AttributeError: pass
         if not geometry_type: geometry_type = geo['features'][0]['geometry']['type']
-        if not col_specs: col_specs = gen_col_specs(geo, geometry_type)
+        if not col_specs: col_specs = colspecs.gen(geo, geometry_type)
 
         #filter features for correct geometry_type
         rows = []
@@ -340,18 +275,7 @@ class DatabaseInterface(object):
             geojson.Feature(geometry=geometry, id=5, properties={'NUM':'many'})
             ]
         geo = geojson.FeatureCollection(features)
-
-        #gen_col_specs
-        col_specs = gen_col_specs(geo)
-        col_specs = fix_col_specs(col_specs)
-        #print 'col_specs',col_specs
-        assert col_specs == [('NUM', 'TEXT', 'NUM'), ('Num$1', 'INT', 'Num'), 
-                ('addr', 'TEXT', 'addr'), ('fish', 'TEXT', 'fish'), ('gpa', 'FLOAT', 'gpa'), 
-                ('name', 'TEXT', 'name'), ('num$2', 'BIGINT', 'num'), ('geometry', 'POINT', 'geometry')]
-        col_specs = gen_col_specs(geo,geometry_type='LineString')
-        #print 'col_specs',col_specs
-        assert col_specs == [('other','INT'), ('geometry','LINESTRING')]
-
+        
         #write_geo
         self.write_geo(geo, 'test_segs', geometry_type='LineString')
         self.write_geo(geo, 'test_jcts', geometry_type='Point')
@@ -370,5 +294,3 @@ class DatabaseInterface(object):
         assert len(rows) == 1
       
         self.commit()
-	print "dbInterface test PASS."
-

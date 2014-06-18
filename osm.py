@@ -1,47 +1,18 @@
-'''
-Download up-to-date OSM data and massage into postgis database.
-'''
 import os
 import time
 import shutil
 import urllib
 import math
 import cmath
-#from collections import namedtuple
 
 import pyproj
 import imposm.parser  # parses OpenStreetMaps xml and pbf file formats.
 import geojson
 
-#import common
 import geo
-#import db
-import names
 import pnwk
 
 osm_geojson_file_extension = '.osm.geojson'
-
-# TODO:  bring back to life?:
-def fetch_osm():
-	os.chdir(osm_dir)
-
-	# stash away previous version
-	save_dir = 'old'
-	if not os.path.exists(save_dir): os.mkdir(save_dir)
-	if os.path.isfile(osm_fname):
-		(stem, ext) = os.path.splitext(osm_fname)
-		creation_time = time.strftime("%Y%m%d",
-				time.localtime(os.path.getctime(osm_fname)))
-		#print "DEBUG stem=%s ext=%s creation_time=%s" % (stem,ext,creation_time)	
-		shutil.move(osm_fname, 
-			save_dir+'/'+stem+'_'+creation_time+ext)	
-
-	#get latest osm extract  
-        common.print_now('Fetching %s' % osm_url)  
-        common.print_now('  to %s' % osm_path)
-        common.print_now('  ... ', noNewLine=True)
-        urllib.urlretrieve(osm_url, osm_fname)
-        print 'Done.'
 
 class Way(object):
     def __init__(self, tags, node_ids):

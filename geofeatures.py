@@ -3,7 +3,7 @@ import pdb
 
 import geojson
 
-def geoFeatures(geo):
+def _geo_features(geo):
     features = geo
     try: features = geo.__geo_interface__
     except AttributeError: pass
@@ -11,24 +11,22 @@ def geoFeatures(geo):
     except TypeError: pass
     return features
 
-# def write
-
-def filterFeatures(features, featureFunc=None, geomType=None, colSpecs=None):
-    features = geoFeatures(features)
+def filter_features(features, feature_func=None, geom_type=None, col_specs=None):
+    features = _geo_features(features)
 
     new_features = []
     for feature in features:
-        if geomType and feature['geometry']['type'] != geomType: continue
+        if geom_type and feature['geometry']['type'] != geom_type: continue
         new_feature = copy.deepcopy(feature)
-        if featureFunc:
-            # featureFunc may edit feature
-            if not featureFunc(new_feature,new_feature['properties']): continue
+        if feature_func:
+            # feature_func may edit feature
+            if not feature_func(new_feature,new_feature['properties']): continue
         new_features.append(new_feature)
 
-        if colSpecs:
+        if col_specs:
             props = new_feature['properties']
             out = {}
-            for (col_name,col_type,prop_name) in colSpecs:
+            for (col_name,col_type,prop_name) in col_specs:
                 if prop_name in props:
                     out[col_name] = props[prop_name]
             new_feature['properties'] = out
@@ -82,46 +80,46 @@ def test():
         def __init__(self,features): 
             self.geo = geojson.FeatureCollection(features)
 
-    # geoFeatures()
-    out = geoFeatures(features)
+    # _geo_features()
+    out = _geo_features(features)
     assert len(out)==3 and out[0]['type'] == 'Feature'
-    out = geoFeatures(geojson.FeatureCollection(features))
+    out = _geo_features(geojson.FeatureCollection(features))
     assert len(out)==3 and out[0]['type'] == 'Feature'
-    out = geoFeatures(GeoThingy(features))
+    out = _geo_features(GeoThingy(features))
     assert len(out)==3 and out[0]['type'] == 'Feature'
 
-    # filterFeatures() - trivial case
-    assert len(filterFeatures([])) == 0
+    # filter_features() - trivial case
+    assert len(filter_features([])) == 0
     
     # check for deep copy
-    out = filterFeatures(features)
+    out = filter_features(features)
     assert len(out) == 3
     assert out[1]['properties']['FULLNAME'] == 'TRAIL'
     out[1]['properties']['FULLNAME'] = 'Matt Davis'
     assert features[1]['properties']['FULLNAME'] == 'TRAIL'
     assert out[1]['properties']['FULLNAME'] == 'Matt Davis'
 
-    # geomType
-    out = filterFeatures(features, geomType='Point')
+    # geom_type
+    out = filter_features(features, geom_type='Point')
     assert len(out)==1 and out[0]['geometry']['type']=='Point'
 
-    # featureFunc
+    # feature_func
     def ffunc(feature,props): 
         if not props['OBJECTID'] > 1: return False
         props['FORMAL_NAME'] = 'Ms. ' + props['FULLNAME']
         return True
 
-    out = filterFeatures(features, featureFunc=ffunc)
+    out = filter_features(features, feature_func=ffunc)
     assert len(out)==2
     assert out[0]['properties']['FORMAL_NAME'] == 'Ms. TRAIL'
 
-    # colSpecs
+    # col_specs
     specs = [('num','INT','OBJECTID'),('name','INT','FORMAL_NAME')]
-    out = filterFeatures(features, ffunc, geomType='LineString', colSpecs=specs)
+    out = filter_features(features, ffunc, geom_type='LineString', col_specs=specs)
     assert len(out) == 1
     assert out[0]['properties']['name'] == 'Ms. TRAIL'
 
-    print 'geoutils test PASSED'
+    print 'geofeatures PASS'
 
 #doit
 test()

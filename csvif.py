@@ -1,20 +1,24 @@
 import csv
+
 import geojson
 
-def readTable(fileName):
+def read_table(fileName):
     with open(fileName, 'rb') as f:
         reader = csv.reader(f)
         rows = []
         for row in reader:
             rows.append(row)
     return rows
-def write(features,fileName, colSpecs=None, title=None):
-    with open(fileName, 'wb') as f:
-        writeFile(features,f,colSpecs=colSpecs, title=title)
 
-def writeFile(features,f,colSpecs=None, title=None):
+def write(features, fileName, col_specs=None, title=None):
+    with open(fileName, 'wb') as f:
+        write_file(features,f,col_specs=col_specs, title=title)
+
+def write_file(features, f, col_specs=None, title=None):
     
-    if not colSpecs: colSpecs = fooBar
+    # TODO auto gen col_specs from features
+    assert col_specs
+
     writer = csv.writer(f)
 
     rows= []
@@ -23,20 +27,20 @@ def writeFile(features,f,colSpecs=None, title=None):
     if title: rows.append([title])
 
     # columns
-    cols = [spec[0] for spec in colSpecs]
+    cols = [spec[0] for spec in col_specs]
     rows.append(cols)
 
     # value rows
     for feature in features:
         props = feature['properties']
-        row = [props[spec[2]] for spec in colSpecs]
+        row = [props[spec[2]] for spec in col_specs]
         rows.append(row)
 
     writer.writerows(rows)
 
 def test():
     fname = 'csv_test_file.csv'
-    colSpecs=[('name',None,'FULLNAME'), ('CATEGORY',None,'CATEGORY')]
+    col_specs=[('name',None,'FULLNAME'), ('CATEGORY',None,'CATEGORY')]
 
     features = [
     {
@@ -78,15 +82,15 @@ def test():
       }
     }]
 
-    write(features,fname, colSpecs=colSpecs, title='Test Table')
-    rows = readTable(fname)
+    write(features,fname, col_specs=col_specs, title='Test Table')
+    rows = read_table(fname)
     print 'rows', rows
     assert len(rows) == 5
     assert rows[0][0] == 'Test Table'
     assert rows[1] == ['name','CATEGORY']
     assert rows[4] == ['pointy dude', 'LIGHT, RAIL STOP']
 
-    print 'csvif test PASSED'
+    print 'csvif PASS'
 
 #doit
 test()

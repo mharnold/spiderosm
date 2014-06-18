@@ -22,7 +22,7 @@ class Bins(object):
         bin = self.bins.setdefault(self._index2(point),[])
         bin.append((point,value))
 
-    def inRect(self,rect):
+    def in_rect(self,rect):
         x0,y0,x1,y1 = rect
         ix0 = self._index(x0)
         iy0 = self._index(y0)
@@ -37,10 +37,10 @@ class Bins(object):
                         if geo.point_in_rect_q(point, rect): results.append((point,value))
         return results
 
-    def inRadius(self,point,r):
+    def in_radius(self,point,r):
         px,py = point
         results = []
-        for p2,value in self.inRect((px-r,py-r,px+r,py+r)):
+        for p2,value in self.in_rect((px-r,py-r,px+r,py+r)):
             if geo.distance(point,p2) < r: results.append((p2,value))
         return results
         
@@ -49,14 +49,14 @@ def test():
     b.add((1,1),'a')
     b.add((2,3),'b')
     b.add((1000,1000000),'far')
-    assert len(b.inRect((0,0,50,50))) == 2 
-    assert len(b.inRect((800,999000,1200,1001000))) == 1
-    assert len(b.inRadius((1,1),0.5)) == 1
-    assert len(b.inRadius((1,1),100)) == 2
-    assert len(b.inRadius((1001,1000001),10)) == 1
-    assert len(b.inRadius((-1,0),.1)) == 0
+    assert len(b.in_rect((0,0,50,50))) == 2 
+    assert len(b.in_rect((800,999000,1200,1001000))) == 1
+    assert len(b.in_radius((1,1),0.5)) == 1
+    assert len(b.in_radius((1,1),100)) == 2
+    assert len(b.in_radius((1001,1000001),10)) == 1
+    assert len(b.in_radius((-1,0),.1)) == 0
 
-    print 'Bins PASSED'
+    print 'bins PASS'
 
 #doit
 test()

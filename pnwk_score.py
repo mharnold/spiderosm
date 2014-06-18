@@ -3,7 +3,7 @@ Path Network - Match Scoring
 '''
 
 import geo 
-import names as canNames
+import cannames
 import pnwk_network
 
 def prob2score(p):
@@ -19,7 +19,7 @@ class PNwkScore(pnwk_network.PNwkNetwork):
         def scoreNameMatch(self):
             if not self.match: return
             if len(self.names)==0 or len(self.match.names)==0: return
-            self.setScore('scoreName', canNames.match_score(self.names,self.match.names))
+            self.setScore('scoreName', cannames.match_score(self.names,self.match.names))
 
         def scoreGeoMatch(self):
             if not self.match: return
@@ -121,7 +121,7 @@ def test():
     assert segy.score2factor('80',importance=.1) == .98
     assert segy.score2factor('not_there',importance=.80) == .60
 
-    print 'pnwk_score test PASSED'
+    print 'pnwk_score PASS'
 
 #doit
 test()

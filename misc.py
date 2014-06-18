@@ -59,10 +59,11 @@ def unzip(Filename):
             os.makedirs(dirname)
         zfile.extract(name, dirname)
 
-def test():
+def _test_dates():
     print 'date_ymd:', date_ymd()
     print 'date_ymdhms:', date_ymdhms()
 
+def _test_print_now():
     print_now('a',noNewLine=True)
     time.sleep(2)
     print_now('b',noNewLine=True)
@@ -71,5 +72,11 @@ def test():
     time.sleep(5)
     print_now('d')
 
-if __name__ == '__main__':
-    test()
+def test(all_=False):
+    if all_: _test_dates()
+    if all_: _test_print_now()
+    print 'misc PASS'
+
+#doit
+test()
+#test(all_=True)

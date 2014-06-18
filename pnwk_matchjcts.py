@@ -4,7 +4,6 @@ Path Network - Match Jcts.
 import pdb
 
 import geo 
-import names as canNames
 import pnwk_score
 
 class PNwkMatchJcts(pnwk_score.PNwkScore):

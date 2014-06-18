@@ -9,9 +9,9 @@ from psycopg2.extras import DictCursor
 
 import dbinterface
 
-class Pgis(dbinterface.DatabaseInterface):
-    def __init__(self, dbName):
-        super(Pgis,self).__init__(dbName)        
+class PGIS(dbinterface.DatabaseInterface):
+    def __init__(self, dbName, verbose=True):
+        super(PGIS,self).__init__(dbName,verbose=verbose)        
 
     # establish database connection 
     # NOTE: postgres server must be running and database must already exist 
@@ -47,10 +47,12 @@ class Pgis(dbinterface.DatabaseInterface):
 def doit():
     # requires preexisting spaitially enabled 'test' database:
     # %createdb test
-    pgis = Pgis('test')
+    pgis = PGIS('test', verbose=False)
    
     # run tests
     pgis.test(verbose=False)
+
+    print "postgis PASS"
 
 #doit
 doit()

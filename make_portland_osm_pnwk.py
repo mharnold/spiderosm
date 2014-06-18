@@ -59,7 +59,7 @@ def doit():
     # if set write results (and intermediate files) to this database
     global db
     #db=False
-    #db = postgis.Pgis(conf['project'])
+    #db = postgis.PGIS(conf['project'])
     db = spatialite.Slite(os.path.join(conf['out_dir'], conf['project'] + '.sqlite'))
 
     misc.update_file_from_url(filename=paths['osm'], url=paths['osm_url'])
