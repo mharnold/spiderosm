@@ -82,7 +82,7 @@ def build_osm_network(clip_rect=None,target_proj=None):
         db.write_geo(osm_data,'osm_ways',geometry_type='LineString')
         db.write_geo(osm_data,'osm_nodes',geometry_type='Point')
     osm_nwk = osm_data.create_path_network()
-    osm_nwk.writeGeojson(paths['osm_network']) # .pnwk.geojson
+    osm_nwk.write_geojson(paths['osm_network']) # .pnwk.geojson
     if db: 
         db.write_pnwk(osm_nwk)
     log('building OSM network DONE.')

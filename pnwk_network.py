@@ -14,7 +14,7 @@ import geo
 import pnwk_namespace
 
 class PNwkNetwork(pnwk_namespace.PNwkNamespace):
-    fileExtension = '.pnwk.geojson'
+    FILE_EXTENSION = '.pnwk.geojson'
 
     def __init__(self,name=None,filename=None, units=None, quiet=False):
 
@@ -29,42 +29,42 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         super(PNwkNetwork,self).__init__(name=name)
 
         # scale constants in meters
-        self.stepScaleM  = 0.3    # approximately one step
-        self.streetScaleM = 8.0   # typical street width
-        self.blockScaleM = 100.0   # typical distance between intersections
+        self.step_scale_m  = 0.3    # approximately one step
+        self.street_scale_m = 8.0   # typical street width
+        self.block_scale_m = 100.0   # typical distance between intersections
 
         # units
         if not units: units="meters"
         if units=="meters":
-            self.unitsPerMeter = 1.0
+            self.units_per_meter = 1.0
         else: 
             if units =="feet":
-                self.unitsPerMeter = 3.28084
+                self.units_per_meter = 3.28084
             else:
                 print "Unrecognized units:", units
                 assert False
-        f = self.unitsPerMeter
-        self.stepScale = self.stepScaleM * f
-        self.streetScale = self.streetScaleM * f
-        self.blockScale = self.blockScaleM * f
+        f = self.units_per_meter
+        self.stepScale = self.step_scale_m * f
+        self.street_scale = self.street_scale_m * f
+        self.block_scale = self.block_scale_m * f
         
         # segs and jcts
         self.segs = {}
         self.jcts = {}
-        self.jctBins = bins.Bins(self.blockScale)  # bins for searching for jcts by location
-        self.lastGenSegId = 0
-        self.lastGenJctId = 0
+        self.jct_bins = bins.Bins(self.block_scale)  # bins for searching for jcts by location
+        self.last_gen_seg_id = 0
+        self.last_gen_jct_id = 0
 
         if filename:
-            self.readGeojson(filename, quiet=quiet)
+            self.read_geojson(filename, quiet=quiet)
       
     # qualifiedTags = tags with namespace prefixes.
-    def addSeg(self, segId, fromJctId, toJctId, points, names=(), tags=None, qualifiedTags=None):
-        assert not self.segs.has_key(segId)
-        #assert fromJctId != toJctId  # looping segs happen e.g. "CARRINGTON LN" in Portland.
+    def add_seg(self, seg_id, from_jct_id, to_jct_id, points, names=(), tags=None, qualifiedTags=None):
+        assert not self.segs.has_key(seg_id)
+        #assert from_jct_id != to_jct_id  # looping segs happen e.g. "CARRINGTON LN" in Portland.
         assert len(points)>=2
 
-        if not segId: segId = self.genSegId()
+        if not seg_id: seg_id = self._gen_seg_id()
 
         # make names canonical to facilitate comparison between networks from different sources
         cans = set([])
@@ -72,80 +72,80 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             canName = cannames.canonical_street_name(name)
             if len(canName)>0: cans.add(cannames.canonical_street_name(name))
 
-        tags = self.addNamespace(tags,self.clientNameSpace)
+        tags = self.add_namespace(tags,self.client_name_space)
         if qualifiedTags: tags.update(qualifiedTags)
 
         seg = self.Seg(
                 network=self, 
-                segId=segId, 
+                seg_id=seg_id, 
                 points=points, 
                 names=cans, 
                 tags=tags)
                 
-        seg.fromJct = self._addConnection(fromJctId, seg, start=True)
-        seg.toJct = self._addConnection(toJctId, seg, start=False)
-        self.segs[segId] = seg
+        seg.from_jct = self._add_connection(from_jct_id, seg, start=True)
+        seg.to_jct = self._add_connection(to_jct_id, seg, start=False)
+        self.segs[seg_id] = seg
 
-    def splitSeg(self, seg, d, fromBeginning, newJctId=None):
-        if not newJctId: newJctId = self.genJctId()
-        assert newJctId < 0
-        assert not self.jcts.has_key(newJctId)
+    def split_seg(self, seg, d, fromBeginning, new_jct_id=None):
+        if not new_jct_id: new_jct_id = self._gen_jct_id()
+        assert new_jct_id < 0
+        assert not self.jcts.has_key(new_jct_id)
 
         if fromBeginning:
             points, points2 = geo.cut(seg.points, d)
-            jct2 = seg.toJct
+            jct2 = seg.to_jct
 
             seg.points = points
-            seg.toJct.segs.remove(seg)
-            seg.toJct = self._addConnection(newJctId, seg, start=False)
+            seg.to_jct.segs.remove(seg)
+            seg.to_jct = self._add_connection(new_jct_id, seg, start=False)
             
-            self.addSeg(
-                    segId=None, 
-                    fromJctId=newJctId, 
-                    toJctId=jct2.jctId, 
+            self.add_seg(
+                    seg_id=None, 
+                    from_jct_id=new_jct_id, 
+                    to_jct_id=jct2.jct_id, 
                     points=points2, 
                     names=list(seg.names), 
                     qualifiedTags=seg.tags
                     )
         else: 
             points2, points = geo.cut(seg.points, seg.length()-d)
-            jct2 = seg.fromJct
+            jct2 = seg.from_jct
 
             seg.points = points
-            seg.fromJct.segs.remove(seg)
-            seg.fromJct = self._addConnection(newJctId, seg, start=True)
-            self.addSeg(
-                    segId=None, 
-                    fromJctId=jct2.jctId, 
-                    toJctId=newJctId, 
+            seg.from_jct.segs.remove(seg)
+            seg.from_jct = self._add_connection(new_jct_id, seg, start=True)
+            self.add_seg(
+                    seg_id=None, 
+                    from_jct_id=jct2.jct_id, 
+                    to_jct_id=new_jct_id, 
                     points=points2, 
                     names=list(seg.names), 
                     qualifiedTags=seg.tags
                     )
 
-    # create a new jctId
+    # create a new jct_id
     # (generated ids are negative)
-    def genJctId(self):
-        self.lastGenJctId -= 1
-        new = self.lastGenJctId
+    def _gen_jct_id(self):
+        self.last_gen_jct_id -= 1
+        new = self.last_gen_jct_id
         assert new not in self.jcts
         return new 
    
-    # create a new segId
+    # create a new seg_id
     # (generated ids are negative)
-    def genSegId(self):
-        self.lastGenSegId -= 1
-        new = self.lastGenSegId
+    def _gen_seg_id(self):
+        self.last_gen_seg_id -= 1
+        new = self.last_gen_seg_id
         assert new not in self.segs
         return new 
 
-    def _add_jct(self, jctId, point):
-        assert not self.jcts.has_key(jctId)
-        jct = self.Jct(network=self, jctId=jctId, point=point)
-        self.jcts[jctId] = jct 
-        self.jctBins.add(point, jct)
+    def _add_jct(self, jct_id, point):
+        assert not self.jcts.has_key(jct_id)
+        jct = self.Jct(network=self, jct_id=jct_id, point=point)
+        self.jcts[jct_id] = jct 
+        self.jct_bins.add(point, jct)
 
-    def _addConnection(self, jctId, seg, start):
+    def _add_connection(self, jct_id, seg, start):
         assert type(seg) == self.Seg
         # junction coords
         if (start):
@@ -153,8 +153,8 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         else:
             point=seg.points[-1]
 
-        if not self.jcts.has_key(jctId): self._add_jct(jctId, point)
-        jct = self.jcts[jctId]
+        if not self.jcts.has_key(jct_id): self._add_jct(jct_id, point)
+        jct = self.jcts[jct_id]
         assert jct.point == point
         jct.segs.add(seg)
         
@@ -167,13 +167,13 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         for jct in self.jcts.values(): features.append(jct.__geo_interface__)
         return geojson.FeatureCollection(features)
 
-    def _parseGeojson(self,geo):
-        #print 'DEBUG _parseGeojson geo:', geo
+    def _parse_geojson(self,geo):
+        #print 'DEBUG _parse_geojson geo:', geo
         assert geo['type'] == 'FeatureCollection'
 
         # property namespace prefixes
         # TODO store pnwk name in json - for now name given at time of read MUST be the same.
-        nsc = self.clientNameSpace
+        nsc = self.client_name_space
         nsp = self.pnwkNameSpace
 
         for feature in geo['features']:
@@ -183,10 +183,10 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             if geometry['type'] != 'LineString':
                 # not reading jcts yet.
                 continue
-            segId = feature['id']
+            seg_id = feature['id']
             points = [tuple(p) for p in geometry['coordinates']]
-            fromJctId = properties[nsp + 'fromJctId']
-            toJctId = properties[nsp + 'toJctId']
+            from_jct_id = properties[nsp + 'from_jct_id']
+            to_jct_id = properties[nsp + 'to_jct_id']
             points = [tuple(p) for p in geometry['coordinates']]
             try:
                 names = properties[nsp + 'name'].split(';')
@@ -196,39 +196,39 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             # filter out pnwk properties
             tags={}
             for (key,value) in properties.items():
-                (ns, name) = self.splitOffNamespace(key) 
+                (ns, name) = self.split_off_namespace(key) 
                 if ns == nsp: continue
                 tags[key] = value
 
-            self.addSeg(segId, fromJctId, toJctId, points, names=names, qualifiedTags=tags)
+            self.add_seg(seg_id, from_jct_id, to_jct_id, points, names=names, qualifiedTags=tags)
 
-    def readGeojson(self, filename, quiet=False): 
+    def read_geojson(self, filename, quiet=False): 
         if not quiet: print 'Reading', filename
-        f = open(filename+self.fileExtension,'r')
+        f = open(filename+self.FILE_EXTENSION,'r')
         geo = geojson.load(f)
         f.close()
-        self._parseGeojson(geo)
+        self._parse_geojson(geo)
 
-    def writeGeojson(self, name=None):
+    def write_geojson(self, name=None):
         if not name: name=self.name
-        f = open(name+self.fileExtension,'w')
+        f = open(name+self.FILE_EXTENSION,'w')
         geojson.dump(self.__geo_interface__,f,indent=2,sort_keys=True)
         f.close()
 
-    def getBBox(self):
+    def get_bbox(self):
         bbox = geo.BBox() 
         for jct in self.jcts.values():
             bbox.add_point(jct.point)
         return bbox.rect()
 
-    def getJctsNearPoint(self, point, maxd=100):
+    def get_jcts_near_point(self, point, max_d=100):
         result = []
-        for point,jct in self.jctBins.in_radius(point,maxd):
+        for point,jct in self.jct_bins.in_radius(point,max_d):
             result.append(jct)
         return result
 
     def meters(self,length):
-        return length / self.unitsPerMeter
+        return length / self.units_per_meter
 
     def feet(self,length):
         return self.meters(length) * 3.28084
@@ -237,14 +237,14 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         return self.meters(length) * 0.000621371
 
     def check_jcts(self):
-        for jctId,jct in self.jcts.items():
-            assert jct.jctId == jctId
+        for jct_id,jct in self.jcts.items():
+            assert jct.jct_id == jct_id
             assert jct.network == self
             jct.check()
 
     def check_segs(self):
-        for segId,seg in self.segs.items():
-            assert seg.segId == segId
+        for seg_id,seg in self.segs.items():
+            assert seg.seg_id == seg_id
             assert seg.network == self
             seg.check()
 
@@ -253,25 +253,25 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         self.check_segs()
 
     class Seg(object):
-        def __init__(self, network, segId, points, fromJct=None, toJct=None, names=None, tags=None):
+        def __init__(self, network, seg_id, points, from_jct=None, to_jct=None, names=None, tags=None):
             self.names = set([]) 
             self.tags = {}
             self.match = None
 
             self.network = network
-            self.segId = segId
+            self.seg_id = seg_id
             self.points = points
-            self.fromBearing=geo.compass_bearing(points[0],points[1])
-            self.toBearing=geo.compass_bearing(points[-1],points[-2])
-            self.fromJct = fromJct
-            self.toJct = toJct
+            self.from_bearing=geo.compass_bearing(points[0],points[1])
+            self.to_bearing=geo.compass_bearing(points[-1],points[-2])
+            self.from_jct = from_jct
+            self.to_jct = to_jct
             if names: self.names.update(names)
             if tags: self.tags.update(tags)
 
         @property
         def __geo_interface__(self):
             geometry = geojson.LineString(self.points)
-            return geojson.Feature(geometry=geometry, id=self.segId, properties=self._asdict())
+            return geojson.Feature(geometry=geometry, id=self.seg_id, properties=self._asdict())
 
         def _asdict(self):
             d = {}
@@ -279,27 +279,27 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             ns = self.network.pnwkNameSpace
 
             if self.match: 
-                d[ns + 'matchId'] = self.match.segId
-                d[ns + 'matchRev'] = self.matchRev
-            d[ns + 'segId'] = self.segId
+                d[ns + 'matchId'] = self.match.seg_id
+                d[ns + 'match_rev'] = self.match_rev
+            d[ns + 'seg_id'] = self.seg_id
             d[ns + 'length'] = self.length()
-            d[ns + 'fromBearing'] = self.fromBearing
-            d[ns + 'toBearing'] = self.toBearing
-            d[ns + 'fromJctId'] = self.fromJct.jctId
-            d[ns + 'toJctId'] = self.toJct.jctId
+            d[ns + 'from_bearing'] = self.from_bearing
+            d[ns + 'to_bearing'] = self.to_bearing
+            d[ns + 'from_jct_id'] = self.from_jct.jct_id
+            d[ns + 'to_jct_id'] = self.to_jct.jct_id
             if len(self.names) > 0: 
-                d[ns + 'name'] = self.namesText()
+                d[ns + 'name'] = self.names_text()
             return d
 
-        def namesText(self):
+        def names_text(self):
             return ';'.join(list(self.names))
 
-        def otherEnd(self,jct):
-            if self.fromJct == jct: 
-                return self.toJct
+        def other_end(self,jct):
+            if self.from_jct == jct: 
+                return self.to_jct
             else:
-                assert self.toJct == jct
-                return self.fromJct
+                assert self.to_jct == jct
+                return self.from_jct
 
         def length(self, units=None):
             l = geo.length(self.points)
@@ -309,20 +309,20 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             if units == "miles":  return self.network.miles(l)
             assert False
 
-        def split(self, d, fromBeginning, newJctId=None):
-            self.network.splitSeg(self, d, fromBeginning, newJctId)
+        def split(self, d, fromBeginning, new_jct_id=None):
+            self.network.split_seg(self, d, fromBeginning, new_jct_id)
         
         def check(self):
-            assert self.network.segs[self.segId] == self
-            assert self.fromJct.network == self.network
-            assert self.fromJct.point == self.points[0]
-            assert self.toJct.network == self.network
-            assert self.toJct.point == self.points[-1]
+            assert self.network.segs[self.seg_id] == self
+            assert self.from_jct.network == self.network
+            assert self.from_jct.point == self.points[0]
+            assert self.to_jct.network == self.network
+            assert self.to_jct.point == self.points[-1]
 
     class Jct(object):
-        def __init__(self, network, jctId, point):
+        def __init__(self, network, jct_id, point):
             self.network = network
-            self.jctId = jctId
+            self.jct_id = jct_id
             self.point = point
             self.segs = set([])
             self.tags = {}
@@ -331,18 +331,18 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         @property
         def __geo_interface__(self):
             geometry = geojson.Point(self.point)
-            return geojson.Feature(geometry=geometry, id=self.jctId, properties=self._asdict())
+            return geojson.Feature(geometry=geometry, id=self.jct_id, properties=self._asdict())
 
         def _asdict(self):
             d = {}
             d.update(self.tags)
             ns = self.network.pnwkNameSpace
-            d[ns + 'jctId'] = self.jctId
-            d[ns + 'segIds'] = [seg.segId for seg in self.segs]
-            if self.match: d['ns + matchId'] = self.match.jctId
-            if 'importSrc' in d:
-                d[ns + 'importSrcId'] = d['importSrc'].jctId
-                del d['importSrc']
+            d[ns + 'jct_id'] = self.jct_id
+            d[ns + 'seg_ids'] = [seg.seg_id for seg in self.segs]
+            if self.match: d['ns + matchId'] = self.match.jct_id
+            if 'import_src' in d:
+                d[ns + 'import_srcId'] = d['import_src'].jct_id
+                del d['import_src']
             return d
 
         def names(self):
@@ -353,29 +353,29 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
 
         def check(self):
             for seg in self.segs: 
-                assert self.network.jcts[self.jctId] == self
+                assert self.network.jcts[self.jct_id] == self
                 assert seg.network == self.network
-                assert seg.fromJct == self or seg.toJct == self
+                assert seg.from_jct == self or seg.to_jct == self
                 assert not seg.match or (seg == seg.match.match)
 
-def testIdGen():
+def test_id_gen():
     pn = PNwkNetwork('pn')
     pn.check()
-    assert pn.genJctId() == -1
-    assert pn.genJctId() == -2
-    assert pn.genSegId() == -1
-    assert pn.genSegId() == -2
+    assert pn._gen_jct_id() == -1
+    assert pn._gen_jct_id() == -2
+    assert pn._gen_seg_id() == -1
+    assert pn._gen_seg_id() == -2
 
-def testSetupG(units=None):
+def test_setup_g(units=None):
     g = PNwkNetwork('g',units=units)    
-    g.addSeg(1, 10, 11, test_points, names=['foo',
+    g.add_seg(1, 10, 11, test_points, names=['foo',
         "NE HALSEY ST FRONTAGE RD",
         "Northeast Halsey Street Frontage Road"])
     g.check()
     return g
 
-def testAddSeg():
-    g = testSetupG()
+def test_add_seg():
+    g = test_setup_g()
 
     #print g.segs
     #print g.jcts
@@ -384,71 +384,71 @@ def testAddSeg():
     seg = g.segs[1]
     assert len(seg.names) == 2
     assert seg.points[1] == test_points[1]
-    assert seg.fromJct.jctId == 10
-    assert seg.toJct.jctId == 11
+    assert seg.from_jct.jct_id == 10
+    assert seg.to_jct.jct_id == 11
 
-def testGeoInterface():
-    g = testSetupG()
+def test_geo_interface():
+    g = test_setup_g()
     seg = g.segs[1]
     geo = seg.__geo_interface__
     #print 'geo:', geo
     assert geo['geometry']['type'] == 'LineString'
     assert geo['geometry']['coordinates'][1] == seg.points[1]
-    assert geo['properties']['g_pnwk$fromJctId'] == 10
+    assert geo['properties']['g_pnwk$from_jct_id'] == 10
 
-def testReadWrite():
+def test_read_write():
     tmpDir = tempfile.gettempdir()
     fname = os.path.join(tmpDir,'spiderosm_pnwk_network_test')
     fname2 = fname +'2'
-    g = testSetupG()
+    g = test_setup_g()
     seg = g.segs[1]
      
-    g.writeGeojson(fname)
+    g.write_geojson(fname)
     g2 = PNwkNetwork(name='g', filename=fname, quiet=True)
     assert len(g2.segs) == 1
     assert len(g2.jcts) == 2
     seg = g2.segs[1]
     assert len(seg.names) == 2
     assert seg.points[1] == test_points[1]
-    assert seg.fromJct.jctId == 10
-    assert seg.toJct.jctId == 11
+    assert seg.from_jct.jct_id == 10
+    assert seg.to_jct.jct_id == 11
     g2.check()
     
-    g2.writeGeojson(fname2)
+    g2.write_geojson(fname2)
     g3 = PNwkNetwork(name='g', filename=fname2, quiet=True)
     assert len(g3.segs) == 1
     assert len(g3.jcts) == 2
     seg = g3.segs[1]
     assert len(seg.names) == 2
     assert seg.points[1] == test_points[1]
-    assert seg.fromJct.jctId == 10
-    assert seg.toJct.jctId == 11
+    assert seg.from_jct.jct_id == 10
+    assert seg.to_jct.jct_id == 11
     g3.check()
 
     # cleanup
     if os.path.exists(fname): os.remove(fname)
     if os.path.exists(fname2): os.remove(fname2)
 
-def testGetJctsNearPoint():
-    g = testSetupG()
-    nj = g.getJctsNearPoint((0,0), maxd=1500)
-    nj2 = g.getJctsNearPoint((0,0))
+def test_get_jcts_near_point():
+    g = test_setup_g()
+    nj = g.get_jcts_near_point((0,0), max_d=1500)
+    nj2 = g.get_jcts_near_point((0,0))
     #print nj
     #print 'nj2:',nj2
     assert len(nj) == 2
     assert len(nj2) == 1
     g.check()
 
-def testGetBBox():
-    g = testSetupG()
-    box = g.getBBox()
+def test_get_bbox():
+    g = test_setup_g()
+    box = g.get_bbox()
     #print 'box:',box
     assert box == (0,0,1000,1000)
     g.check()
 
-def testUnits():
-    gft = testSetupG(units="feet")
-    gm = testSetupG(units="meters")
+def test_units():
+    gft = test_setup_g(units="feet")
+    gm = test_setup_g(units="meters")
     segft = gft.segs[1]
     segm = gm.segs[1]
     assert round(segft.length())== 1414 and round(segft.length(units="meters"))==431
@@ -457,13 +457,13 @@ def testUnits():
 test_points = [(0,0), (1000,1000)]
 test_points2 = [(5,0), (1005,1000)]
 def test():
-    testUnits()
-    testIdGen()
-    testAddSeg()
-    testGeoInterface()
-    testReadWrite()
-    testGetJctsNearPoint()
-    testGetBBox()
+    test_units()
+    test_id_gen()
+    test_add_seg()
+    test_geo_interface()
+    test_read_write()
+    test_get_jcts_near_point()
+    test_get_bbox()
 
     print 'pnwk_network PASS'
 

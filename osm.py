@@ -233,7 +233,7 @@ class OSMData(object):
 
                         num_segs += 1  # segment number used as id
                         #print 'adding segment', num_segs, 'names=', names
-                        nwk.addSeg(num_segs, snode_id, node_id, points, names=names, tags=tags)
+                        nwk.add_seg(num_segs, snode_id, node_id, points, names=names, tags=tags)
                         nwk.jcts[snode_id].tags['nodeId'] = snode_id
                         nwk.jcts[node_id].tags['nodeId'] = node_id
 

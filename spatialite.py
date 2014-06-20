@@ -53,7 +53,8 @@ def test():
     db = Slite(fname)
     db.test(verbose=False)
     if os.path.exists(fname): os.remove(fname)
-    print "spatialite test PASS"
+    print "spatialite PASS"
 
 if __name__ == "__main__":
+    # test is slow for some reason, so only run when invoked as main.
     test()

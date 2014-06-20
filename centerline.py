@@ -6,7 +6,7 @@ import pdb
 import pnwk
 
 ''' features in python geo interface format (geojson) '''
-def make_pnwk(features, props=None, namesFunc=None, filterFunc=None, name=None):
+def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None):
     print 'num centerline features:', len(features)
     #print 'DEBUG random city feature:',features[10]
 
@@ -26,7 +26,7 @@ def make_pnwk(features, props=None, namesFunc=None, filterFunc=None, name=None):
             return num_jcts[0]
 
     for feature in features:
-        if filterFunc and not filterFunc(feature): continue
+        if filter_func and not filter_func(feature): continue
 
         geometry = feature['geometry']
         if geometry['type'] == 'MultiLineString':
@@ -40,7 +40,7 @@ def make_pnwk(features, props=None, namesFunc=None, filterFunc=None, name=None):
 
         for part in parts:
             num_segs += 1
-            segId = num_segs
+            seg_id = num_segs
             points = [tuple(l) for l in part]
             start_point = points[0];
             end_point = points[-1]
@@ -53,7 +53,7 @@ def make_pnwk(features, props=None, namesFunc=None, filterFunc=None, name=None):
                     if prop in feature['properties']: 
                         tags[prop] = feature['properties'][prop]
 
-            city_street_network.addSeg(segId, jct_id(start_point), jct_id(end_point), points,
+            city_street_network.add_seg(seg_id, jct_id(start_point), jct_id(end_point), points,
                     names=namesFunc(feature),
                     tags=tags
                     )
@@ -126,7 +126,7 @@ def berkeley_pnwk(features,name=None,props=None):
         category = feature['properties']['CATEGORY']
         return category in ('CONNECTOR','HIGHWAY','MAJOR','MINOR','PEDESTRIAN')
 
-    return make_pnwk(features,props=props,namesFunc=berkeley_names,filterFunc=berkeley_filter,name=name)
+    return make_pnwk(features,props=props,namesFunc=berkeley_names,filter_func=berkeley_filter,name=name)
 
 def test():
     features = [
@@ -175,7 +175,7 @@ def test():
     assert len(names) == 2
     assert 'I 80 E UNIVERSITY RAMP' in names
     assert 'I 80' in names
-    assert len(pnwk.segs[2].namesText()) == 0
+    assert len(pnwk.segs[2].names_text()) == 0
 
     print 'centerline test PASSED'
 

@@ -4,6 +4,8 @@ Built up via class extension:
     PNwkNamespace  - network name, attribute name prefixes (BASE CLASS)
     PNwkNetwork    - path network implementation, read, write
     PNwkScore      - match scoring
+    PNwkMatchJcts
+    PNwkMatchSpokes
     PNwkMatch      - matcher
     PNwk           - top level.
 '''
@@ -17,4 +19,4 @@ def test():
     foo = PNwk('foo')
     assert foo.name == 'foo'
 
-    print 'PNwk test passed.'
+    print 'pnwk pass'

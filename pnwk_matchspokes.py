@@ -16,14 +16,15 @@ class PNwkMatchSpokes(pnwk_matchjcts.PNwkMatchJcts):
 
     # match nwk2 into nwk1
     # matches are searched for in radius d and must be unique within that radius in both networks
-    def spokeCrawl(self, startJctMatchList, msg=None, quiet=False):
-        if msg: print 'SPOKECRAWL:',msg
-        newJctMatches = startJctMatchList
+    def spoke_crawl(self, star_jct_match_list, msg=None, quiet=False):
+        if msg and not quiet: print 'SPOKECRAWL:',msg
+        new_jct_matches = star_jct_match_list
         passNum = 0
-        while len(newJctMatches)>0:
+        while len(new_jct_matches)>0:
             passNum += 1
-            print 'pass %d, processing %d matched junctions:' % (passNum, len(newJctMatches))
-            newJctMatches = matchSpokes(newJctMatches)
+            if not quiet: 
+                print 'pass %d, processing %d matched junctions:' % (passNum, len(new_jct_matches))
+            new_jct_matches = match_spokes(new_jct_matches)
 
         return passNum>1
 
@@ -33,19 +34,19 @@ class Spoke(object):
         self.jct = jct
         self.seg = seg
 
-        if seg.fromJct == jct:
-            self.bearing = seg.fromBearing
+        if seg.from_jct == jct:
+            self.bearing = seg.from_bearing
         else:
-            assert seg.toJct == jct
-            self.bearing = seg.toBearing
+            assert seg.to_jct == jct
+            self.bearing = seg.to_bearing
 
     # is spoke direction reversed from segment direction
     def upstream(self):
-        return self.seg.toJct == self.jct
+        return self.seg.to_jct == self.jct
 
     # return jct at far end of spoke
     def end(self):
-        return self.seg.otherEnd(self.jct)
+        return self.seg.other_end(self.jct)
 
     # return spoke that continues on from far end of this spoke (if any)
     def next(self):
@@ -80,19 +81,19 @@ class Spoke(object):
         return self.seg.length()
 
     # trim spoke length (by splitting seg)
-    def trim(self,d,newJctId=None):
+    def trim(self,d,new_jct_id=None):
         assert 0<d and d<self.length()
         fromBeginning = not self.upstream()
-        self.seg.split(d, fromBeginning, newJctId=newJctId) 
-        assert not newJctId or self.end().jctId==newJctId
+        self.seg.split(d, fromBeginning, new_jct_id=new_jct_id) 
+        assert not new_jct_id or self.end().jct_id==new_jct_id
 
     # return subset of spokes that match self (along with distances along spokes of match)
     def match(self, spokes):
-        matchSet = []
-        if self.seg.match: return matchSet
+        match_set = []
+        if self.seg.match: return match_set
 
         len1 = self.length()
-        streetScale = self.seg.network.streetScale
+        street_scale = self.seg.network.street_scale
         for spoke in spokes:
             if spoke.seg.match: continue
             len2 = spoke.length()
@@ -107,25 +108,25 @@ class Spoke(object):
                 d2 = length
 
             # to match, segments must be approximately same length
-            if abs(d1-d2) > max(streetScale, 0.1*length): continue
+            if abs(d1-d2) > max(street_scale, 0.1*length): continue
 
             # to match, segment end points must be near each other
-            if geo.distance(self.interpolate(d1),spoke.interpolate(d2)) > streetScale: continue
+            if geo.distance(self.interpolate(d1),spoke.interpolate(d2)) > street_scale: continue
 
-            matchSet.append((self, d1, spoke, d2))
+            match_set.append((self, d1, spoke, d2))
 
-        return matchSet
+        return match_set
  
-def trimSpokeQ(shorter, longer, d):
+def _trim_spoke_q(shorter, longer, d):
 
     # if length difference significant, trim
-    if abs(longer.length()-d)>longer.seg.network.streetScale:
+    if abs(longer.length()-d)>longer.seg.network.street_scale:
         return True 
    
     # if next point after shorter spoke end is better match for longer end, trim!
-    nextShorter = shorter.next()
-    if nextShorter:
-        delta_next = geo.distance(longer.end().point, nextShorter.end().point)
+    next_shorter = shorter.next()
+    if next_shorter:
+        delta_next = geo.distance(longer.end().point, next_shorter.end().point)
         delta_this = geo.distance(longer.end().point, shorter.end().point)
         return delta_next < delta_this
 
@@ -154,33 +155,33 @@ def trimMatchedSpokes(spoke1, d1, spoke2, d2):
     if length2-d<1: d = max(middle,length2-1)
 
     long = spoke2
-    if trimSpokeQ(shorter, longer, d):
+    if _trim_spoke_q(shorter, longer, d):
         longer.trim(d)
-        shorter.end().tags['exportCount'] = shorter.end().tags.get('exportCount',0) + 1
-        longer.end().tags['importSrc'] = shorter.end()
+        shorter.end().tags['export_count'] = shorter.end().tags.get('export_count',0) + 1
+        longer.end().tags['import_src'] = shorter.end()
 
-def matchJctSpokes(jct1, jct2):
+def _match_jct_spokes(jct1, jct2):
     global there
     assert jct1.network != jct2.network
-    newJctMatches = []
+    new_jct_matches = []
     
     spokes1 = jct1.spokes()
     spokes2 = jct2.spokes()
     #print 'len1, len2:', len(spokes1), len(spokes2)
 
     for spoke1 in spokes1:
-        matchSet = spoke1.match(spokes2)
+        match_set = spoke1.match(spokes2)
         
         #matches must be unique
-        if len(matchSet) != 1: continue
+        if len(match_set) != 1: continue
 
-        spoke1x,d1,spoke2,d2 = matchSet[0]
+        spoke1x,d1,spoke2,d2 = match_set[0]
         assert spoke1x == spoke1
 
         #matches must be unique in both directions
-        matchSet2 = spoke2.match(spokes1)
-        assert spoke1 in [ m[2] for m in matchSet2 ]
-        if len(matchSet2) != 1: continue
+        match_set2 = spoke2.match(spokes1)
+        assert spoke1 in [ m[2] for m in match_set2 ]
+        if len(match_set2) != 1: continue
 
         assert not spoke1.seg.match
         assert not spoke2.seg.match
@@ -203,41 +204,41 @@ def matchJctSpokes(jct1, jct2):
             rev = 0
         else:
             rev = 1
-        spoke1.seg.matchRev = rev
-        spoke2.seg.matchRev = rev
+        spoke1.seg.match_rev = rev
+        spoke2.seg.match_rev = rev
 
         # continue spoke crawl where we left off.
-        newJctMatches.append((spoke1.end(), spoke2.end()))
+        new_jct_matches.append((spoke1.end(), spoke2.end()))
         there = False
 
-    return newJctMatches
+    return new_jct_matches
 
-def matchSpokes(jctMatchList):
-    newJctMatches = []
-    for (jct1,jct2) in jctMatchList:
-        newJctMatches += matchJctSpokes(jct1, jct2)
-    return newJctMatches
+def match_spokes(jct_match_list):
+    new_jct_matches = []
+    for (jct1,jct2) in jct_match_list:
+        new_jct_matches += _match_jct_spokes(jct1, jct2)
+    return new_jct_matches
 
 
 def test():
     points = [(0,0), (1000,1000)]
     points2 = [(5,0), (1005,1000)]
     g = PNwkMatchSpokes('g')    
-    g.addSeg(1, 10, 11, points, names=['foo',
+    g.add_seg(1, 10, 11, points, names=['foo',
         "NE HALSEY ST FRONTAGE RD",
         "Northeast Halsey Street Frontage Road"])
 
     # test spokes
     spokes = g.jcts[10].spokes()
-    assert len(spokes)==1 and spokes[0].bearing==45 and spokes[0].seg.segId==1 
+    assert len(spokes)==1 and spokes[0].bearing==45 and spokes[0].seg.seg_id==1 
     spokes = g.jcts[11].spokes()
-    assert len(spokes)==1 and spokes[0].bearing==225 and spokes[0].seg.segId==1 
+    assert len(spokes)==1 and spokes[0].bearing==225 and spokes[0].seg.seg_id==1 
     g.check()
 
     # test segment and spoke length
     n3 = PNwkMatchSpokes('n3_nwk')
     points3 = [(0,0),(1,0),(1,1)]
-    n3.addSeg(1, 10, 11, points3)
+    n3.add_seg(1, 10, 11, points3)
     assert n3.segs[1].length() == 2
     assert n3.jcts[11].spokes()[0].length() == 2
 
@@ -272,15 +273,15 @@ def test():
 
     # test spoke.next()
     nstar = PNwkMatchSpokes('star_nwk')
-    nstar.addSeg(360,0,360,[(0,0),(0,100)])
-    nstar.addSeg(90,0,90,[(0,0),(100,0)])
-    nstar.addSeg(180,0,180,[(0,0),(0,-100)])
-    nstar.addSeg(270,0,270,[(0,0),(-100,0)])
+    nstar.add_seg(360,0,360,[(0,0),(0,100)])
+    nstar.add_seg(90,0,90,[(0,0),(100,0)])
+    nstar.add_seg(180,0,180,[(0,0),(0,-100)])
+    nstar.add_seg(270,0,270,[(0,0),(-100,0)])
     assert Spoke(seg=nstar.segs[360],jct=nstar.jcts[360]).next().end().point == (0, -100)
     assert Spoke(seg=nstar.segs[270],jct=nstar.jcts[270]).next().end().point == (100, 0)
     assert Spoke(seg=nstar.segs[270],jct=nstar.jcts[0]).next() == None
 
-    print 'pnwk_matchspokes test PASSED'
+    print 'pnwk_matchspokes PASS'
 
 #doit
 test()

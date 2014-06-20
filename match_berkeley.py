@@ -91,7 +91,7 @@ def match_berkeley():
 
         # BBOX 
         city_nwk = pnwk.PNwk(name='city',filename=paths['city_network'],units='meters')
-        city_bbox = city_nwk.getBBox()
+        city_bbox = city_nwk.get_bbox()
         print 'city_bbox:', city_bbox
         city_bbox_buffered = geo.buffer_box(city_bbox,1000) #buffer by 1000 meters
         print 'city_bbox_buffered:', city_bbox_buffered
@@ -128,7 +128,7 @@ def build_city_network():
     city_geojson = json.load(json_file) 
     json_file.close()
     city_nwk = centerline.berkeley_pnwk(name='city',features=city_geojson['features'])
-    city_nwk.writeGeojson(paths['city_network']) 
+    city_nwk.write_geojson(paths['city_network']) 
     if db: db.write_pnwk(city_nwk)
     log('building city centerline network... DONE')
 
@@ -140,7 +140,7 @@ def build_osm_network(clip_rect=None,target_proj=None):
         db.write_geo(osm_data,'osm_ways',geometry_type='LineString')
         db.write_geo(osm_data,'osm_nodes',geometry_type='Point')
     osm_nwk = osm_data.create_path_network(name='osm')
-    osm_nwk.writeGeojson(paths['osm_network']) # .pnwk.geojson
+    osm_nwk.write_geojson(paths['osm_network']) # .pnwk.geojson
     if db: 
         db.write_pnwk(osm_nwk)
     log('DONE building OSM network.')
@@ -150,10 +150,10 @@ def match_networks(pnwk1, pnwk2):
 
     log('matching %s and %s networks...' % (pnwk1.name, pnwk2.name))
     pnwk1.match(pnwk2)
-    pnwk1.matchStats()
-    pnwk2.matchStats()
-    pnwk1.writeGeojson(os.path.join(conf['out_dir'], pnwk1.name + '_matched'))
-    pnwk2.writeGeojson(os.path.join(conf['out_dir'], pnwk2.name + '_matched'))
+    pnwk1.match_stats()
+    pnwk2.match_stats()
+    pnwk1.write_geojson(os.path.join(conf['out_dir'], pnwk1.name + '_matched'))
+    pnwk2.write_geojson(os.path.join(conf['out_dir'], pnwk2.name + '_matched'))
     if db:
         db.write_pnwk(pnwk1, name=pnwk1.name + '_matched')
         db.write_pnwk(pnwk2, name=pnwk2.name + '_matched')
@@ -164,7 +164,7 @@ def mismatched_names_report():
 
     def mismatchFunc(feature,props):
         if props.get('match$score',0)<50: return False
-        if props.get('match$scoreName',100)==100: return False
+        if props.get('match$score_name',100)==100: return False
         if 'osm$verified:name' in props: return False
         if props.get('osm$source:name'): return False
         props['report$wayURL'] = 'http://www.openstreetmap.org/way/%d' % props['osm$wayId']

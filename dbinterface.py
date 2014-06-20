@@ -215,7 +215,7 @@ class DatabaseInterface(object):
                 print 'dbinterface.py WARNING:', msg
         else:
             assert len(existing) == 0
-            print 'dbinterface.py:', 'Adding project spatial reference system (srid=%d) to postgis database %s' % (
+            print 'dbinterface.py:', 'Adding spatial reference system (srid=%d) to postgis database %s' % (
                 srs_info['srid'],
                 db_name)
             colspecs = [ (col,'generic') for col in ('srid','auth_name','auth_srid','proj4text','srtext')]

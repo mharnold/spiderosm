@@ -144,7 +144,7 @@ def _test_interpolate():
     assert interpolate(ls, 20) == (10.0,10.0)
     assert interpolate(ls, 39) == (1.0,0.0)
 
-# returns (maxSep,avgBearingDelta)
+# returns (maxSep,avg_bearing_delta)
 def divergence(points1,points2):
     len1 = length(points1)
     len2 = length(points2)
