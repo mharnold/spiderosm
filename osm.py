@@ -242,3 +242,10 @@ class OSMData(object):
         print 'segments added:', num_segs
         return nwk
 
+def test():
+    # TODO: more rigorous testing.
+    print "osm PASS"
+
+#doit
+test()
+

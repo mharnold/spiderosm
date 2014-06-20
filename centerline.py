@@ -6,8 +6,8 @@ import pdb
 import pnwk
 
 ''' features in python geo interface format (geojson) '''
-def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None):
-    print 'num centerline features:', len(features)
+def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,quiet=False):
+    if not quiet: print 'num centerline features:', len(features)
     #print 'DEBUG random city feature:',features[10]
 
     city_street_network = pnwk.PNwk(name=name)
@@ -58,30 +58,30 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None)
                     tags=tags
                     )
    
-    if len(skipped_features) > 0:
+    if len(skipped_features) > 0  and  not quiet:
         print '%d features skipped.' % len(skipped_features)
         print 'first skipped feature:',feature
 
     return city_street_network
 
-def rlis_pnwk(features,name=None,props=None):
+def rlis_pnwk(features,name=None,props=None,quiet=False):
     def rlis_names(feature):
-        def _rlis_names0(prefix,streetname,ftype):
-            #print 'DEBUG _rlis_names0 prefix,streetname,ftype', prefix,streetname,ftype
+        def _rlis_names0(prefix,street_name,ftype):
+            #print 'DEBUG _rlis_names0 prefix,street_name,ftype', prefix,street_name,ftype
 
-            if not streetname or streetname=='UNNAMED': return []
+            if not street_name or street_name=='UNNAMED': return []
             names = []
 
-            # <prefix> <streetname> <ftype>
+            # <prefix> <street_name> <ftype>
             name = ''
             if prefix: name += (prefix + ' ')
-            name += streetname
+            name += street_name
             if ftype: name += (' ' + ftype)
             names.append(name)
 
             # split out names in RAMPs
             if ftype == 'RAMP':
-                for sname in streetname.split('-'):
+                for sname in street_name.split('-'):
                     names += _rlis_names0(prefix,sname,'')
                     names += _rlis_names0('',sname,'')  # want 'I205' not 'NE I205'
             
@@ -89,13 +89,16 @@ def rlis_pnwk(features,name=None,props=None):
             return names
         properties = feature['properties']
         prefix = properties.get('PREFIX')
-        streetname = properties.get('STREETNAME')
+        street_name = properties.get('STREETNAME')
         ftype = properties.get('FTYPE')
-        return _rlis_names0(prefix,streetname,ftype)
-    #return make_pnwk(features,'LOCALID',namesFunc=rlis_names,name=name)
-    return make_pnwk(features,props=props,namesFunc=rlis_names,name=name)
+        return _rlis_names0(prefix,street_name,ftype)
+    return make_pnwk(features,
+            props=props,
+            namesFunc=rlis_names,
+            name=name,
+            quiet=quiet)
 
-def berkeley_pnwk(features,name=None,props=None):
+def berkeley_pnwk(features, name=None, props=None, quiet=False):
     def berkeley_names(feature): 
         names = []
         props = feature['properties']
@@ -126,7 +129,12 @@ def berkeley_pnwk(features,name=None,props=None):
         category = feature['properties']['CATEGORY']
         return category in ('CONNECTOR','HIGHWAY','MAJOR','MINOR','PEDESTRIAN')
 
-    return make_pnwk(features,props=props,namesFunc=berkeley_names,filter_func=berkeley_filter,name=name)
+    return make_pnwk(features,
+            props=props,
+            namesFunc=berkeley_names,
+            filter_func=berkeley_filter,
+            name=name,
+            quiet=quiet)
 
 def test():
     features = [
@@ -169,7 +177,7 @@ def test():
       }
     }]
 
-    pnwk = berkeley_pnwk(features)
+    pnwk = berkeley_pnwk(features,quiet=True)
     assert len(pnwk.segs) == 2
     names = pnwk.segs[1].names
     assert len(names) == 2
@@ -177,7 +185,7 @@ def test():
     assert 'I 80' in names
     assert len(pnwk.segs[2].names_text()) == 0
 
-    print 'centerline test PASSED'
+    print 'centerline PASS'
 
 #doit 
 test()

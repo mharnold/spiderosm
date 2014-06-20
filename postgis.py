@@ -11,7 +11,7 @@ import dbinterface
 
 class PGIS(dbinterface.DatabaseInterface):
     def __init__(self, dbName, verbose=True):
-        super(PGIS,self).__init__(dbName,verbose=verbose)        
+        super(PGIS,self).__init__(dbName, verbose=verbose)        
 
     # establish database connection 
     # NOTE: postgres server must be running and database must already exist 
@@ -24,7 +24,8 @@ class PGIS(dbinterface.DatabaseInterface):
 
     def _add_spatial_extension(self):
         if not 'spatial_ref_sys' in self.get_table_names():
-            print 'pgis.py:','Adding postgis extension to postgres database %s' % self.db_name
+            if self.verbose: 
+                print 'pgis.py:','Adding postgis extension to postgres database %s' % self.db_name
             self.exec_sql('create extension postgis;')
             self.commit()
         assert 'spatial_ref_sys' in self.get_table_names()

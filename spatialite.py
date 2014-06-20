@@ -11,8 +11,8 @@ import pyspatialite.dbapi2
 import dbinterface
 
 class Slite(dbinterface.DatabaseInterface):
-    def __init__(self, dbName):
-        super(Slite,self).__init__(dbName)        
+    def __init__(self, dbName, verbose=True):
+        super(Slite,self).__init__(dbName, verbose=verbose)        
 
     # establish database connection 
     def _connect(self):
@@ -23,7 +23,8 @@ class Slite(dbinterface.DatabaseInterface):
 
     def _add_spatial_extension(self):
         if not 'spatial_ref_sys' in self.get_table_names():
-            print 'SELECT spatialite.py:','Initializing spatialite metadata for %s' % self.db_name
+            if self.verbose:
+                print 'SELECT spatialite.py:','Initializing spatialite metadata for %s' % self.db_name
             self.exec_sql('select InitSpatialMetadata()')
             self.commit()
         assert 'spatial_ref_sys' in self.get_table_names()
@@ -45,12 +46,12 @@ def dict_factory(cursor, row):
     return d
 
 def test():
-    f = tempfile.NamedTemporaryFile(suffix='.sqlite',delete=False)
+    f = tempfile.NamedTemporaryFile(suffix='.sqlite', delete=False)
     fname = f.name
-    print 'fname',fname
+    #print 'fname',fname
     f.close()
 
-    db = Slite(fname)
+    db = Slite(fname, verbose=False)
     db.test(verbose=False)
     if os.path.exists(fname): os.remove(fname)
     print "spatialite PASS"
