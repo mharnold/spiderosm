@@ -65,87 +65,87 @@ rewrites = {
                 'TRAIL':'TRL'
  		}
 
-
-allowed_chars = string.ascii_letters + string.digits + " "  # others get mapped to ' '
 def restrict_chars(name):
-	out = []
-	for c in name:
-		if c in allowed_chars: 
-			out.append(c)
-		else:
-			out.append(' ')
-	return ''.join(out)
+    ALLOWED_CHARS = string.ascii_letters + string.digits + " "  # others get mapped to ' '
+    IGNORE_CHARS = "'"
+    out = []
+    for c in name:
+        if c in ALLOWED_CHARS: 
+            out.append(c) 
+        else:
+            if c not in IGNORE_CHARS: out.append(' ')
+    return ''.join(out)
 
 def canonical_street_name(name):
-        '''
-        Regularizes street name to facilitate comparison.  
-        Converts to all caps and applies standard abbreviations.
-        '''
-	if name is None: return None;
+    '''
+    Regularizes street name to facilitate comparison.  
+    Converts to all caps and applies standard abbreviations.
+    '''
+    if name is None: return None;
 
-	#print "DEBUG name in: ", name
-	space = ' ' 
+    #print "DEBUG name in: ", name
+    space = ' ' 
 
-	# restrict character set: simplicity, security
-	name = restrict_chars(name)
+    # restrict character set: simplicity, security
+    name = restrict_chars(name)
 
-	# all caps
-	name = name.upper()
+    # all caps
+    name = name.upper()
 
-	# words
-	words=name.strip().split(space)
-        words = [w for w in words if w != '']
-	#print "DEBUG words: ", words
+    # words
+    words=name.strip().split(space)
+    words = [w for w in words if w != '']
+    #print "DEBUG words: ", words
 
-	# rewrites
-        new_words = []
-	for word in words:
-          	if rewrites.has_key(word):
-                        new=rewrites[word]
-                        if len(new)>0: new_words.append(new)
-                        continue
-                if len(word)>1 and word[0]=='I' and word[1:].isdigit(): 
-                        new_words.append('I')
-                        new_words.append(word[1:])
-                        continue
-                new_words.append(word)
-        words = new_words
+    # rewrites
+    new_words = []
+    for word in words:
+            if rewrites.has_key(word):
+                    new=rewrites[word]
+                    if len(new)>0: new_words.append(new)
+                    continue
+            if len(word)>1 and word[0]=='I' and word[1:].isdigit(): 
+                    new_words.append('I')
+                    new_words.append(word[1:])
+                    continue
+            new_words.append(word)
+    words = new_words
 
-        # two word rewrites
-        new_words = []
-        skip=False
-        for i in range(len(words)):
-            if skip:
-                skip=False
-                continue
-            if i == len(words)-1:
-                #last wordn
-                new_words.append(words[i])
-                continue
-            if words[i] == 'TRANSIT' and words[i+1] == 'CENTER':
-                new_words.append('TC')
-                skip=True
-                continue
-            if words[i] == 'UNITED' and words[i+1] == 'STATES':
-                new_words.append('US')
-                skip=True
-                continue
-            if words[i+1].isdigit() and words[i] in ['HWY','US','OR']:
-                new_words.append('HWY')
-                new_words.append(words[i+1])
-                skip=True
-                continue
-            if words[i] == 'MC':
-                new_words.append('MC' + words[i+1])
-                skip=True
-                continue
+    # two word rewrites
+    new_words = []
+    skip=False
+    for i in range(len(words)):
+        if skip:
+            skip=False
+            continue
+        if i == len(words)-1:
+            #last word
             new_words.append(words[i])
-        words = new_words
+            continue
+        if words[i] == 'TRANSIT' and words[i+1] == 'CENTER':
+            new_words.append('TC')
+            skip=True
+            continue
+        if words[i] == 'UNITED' and words[i+1] == 'STATES':
+            new_words.append('US')
+            skip=True
+            continue
+        if words[i+1].isdigit() and words[i] in ['HWY','US','OR']:
+            new_words.append('HWY')
+            new_words.append(words[i+1])
+            skip=True
+            continue
+        if words[i] == 'MC':
+            new_words.append('MC' + words[i+1])
+            skip=True
+            continue
+        new_words.append(words[i])
+    words = new_words
 
-        # single spaces between words
-        out = ' '.join(words).strip()
+    # single spaces between words
+    out = ' '.join(words).strip()
 
-        return out
+    return out
 
 def test_can(name1,name2=None):
     can1 = canonical_street_name(name1)
@@ -165,19 +165,18 @@ def test():
         test_can("I84 FWY","I 84")
         test_can(" 13133","13133")
         test_can("US BANCORP COLUMBIA CENTER TC","UNITED STATES BANCORP COLUMBIA CENTER TRANSIT CENTER")
-        test_can("COEUR D ALENE DR", "COEUR D'ALENE DR")
+        test_can("COEUR DALENE DR", "COEUR D'ALENE DR")
         test_can("BURNSIDE BRG", "BURNSIDE BRIDGE")
         test_can("BLAZER TRL","BLAZER TRAIL")
         test_can("HWY 30","US 30")
         test_can("MARTIN LUTHER KING  JUNIOR BLVD","MARTIN LUTHER KING JR BLVD")
         test_can("Mc Gee Street", "McGee Street")
+        test_can("Saint Alban's Road", "ST ALBANS RD")
 
-        # cases below are now to be handled by 'fuzzy matching' (edit distance)
+
+        # 'fuzzy matching' (edit distance)
         assert match_score(['A St'],['B Street']) == 75.0
 
-        #test_can("CLUB HOUSE CIR", "CLUBHOUSE CIR")
-        #test_can("S BERGIS RD", "BERGIS RD")
-        #test_can("PORTLAND BLVD CT", "PORTLAND BL CT")
 
 	print 'cannames PASS.'
 #doit
