@@ -279,7 +279,7 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             ns = self.network.pnwkNameSpace
 
             if self.match: 
-                d[ns + 'matchId'] = self.match.seg_id
+                d[ns + 'match_id'] = self.match.seg_id
                 d[ns + 'match_rev'] = self.match_rev
             d[ns + 'seg_id'] = self.seg_id
             d[ns + 'length'] = self.length()
@@ -339,9 +339,9 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             ns = self.network.pnwkNameSpace
             d[ns + 'jct_id'] = self.jct_id
             d[ns + 'seg_ids'] = [seg.seg_id for seg in self.segs]
-            if self.match: d['ns + matchId'] = self.match.jct_id
+            if self.match: d['ns + match_id'] = self.match.jct_id
             if 'import_src' in d:
-                d[ns + 'import_srcId'] = d['import_src'].jct_id
+                d[ns + 'import_src_id'] = d['import_src'].jct_id
                 del d['import_src']
             return d
 

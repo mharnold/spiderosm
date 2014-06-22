@@ -191,7 +191,8 @@ def mismatched_names_report():
             ('wayId', 'BIGINT', 'osm$wayId'),
             ('fixme', 'TEXT', 'osm$fixme:name')
             ]
-    webmap = geofeatures.filterFeatures(mismatches, colSpecs=webmap_specs)
+    webmap = geofeatures.filter_features(mismatches, 
+            col_specs=webmap_specs)
 
     # htlml quote TEXT property values to guard against injection attacks.
     for feature in webmap:

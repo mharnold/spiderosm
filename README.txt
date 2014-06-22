@@ -138,18 +138,18 @@ Note that pnwk segments are derived from splitting segments in
 the input data, i.e. an osm way is likely split into multiple path network
 segments.
 
-city_pnwk$fromBearing - compass bearing of segment at it's origin.  0=North, 90=East, etc.
-city_pnwk$fromJctId - id of jct (node/intersection) where this segment originates.
+city_pnwk$from_bearing - compass bearing of segment at it's origin.  0=North, 90=East, etc.
+city_pnwk$from_jct_id - id of jct (node/intersection) where this segment originates.
 city_pnwk$length - segment length in feet or meters (same units as projection)
-city_pnwk$matchId - id of matched segment in osm_pnwk
-city_pnwk$matchRev - 1 if sense (direction) of matched segment is reversed
+city_pnwk$match_id - id of matched segment in osm_pnwk
+city_pnwk$match_rev - 1 if sense (direction) of matched segment is reversed
 city_pnwk$name - canonical version of segment name(s) used for comparison with
 		 other network.
-city_pnwk$segId - id of this segment
-city_pnwk$toBearing - compass bearing of end of segment (from point of view of end jct.)
-city_pnwk$toJctId - id of jct (node/intersection) where this segment terminates.
+city_pnwk$seg_id - id of this segment
+city_pnwk$to_bearing - compass bearing of end of segment (from point of view of end jct.)
+city_pnwk$to_jct_id - id of jct (node/intersection) where this segment terminates.
 
-match$avgBearingDelta - averages difference in bearing for two people walking the segments 
+match$avg_bearing_delta - averages difference in bearing for two people walking the segments 
 			simultaneously (see DIVERGENCE above)
 match$divergence - approximately the largest distance in feet between this segment and the
 		   matched segment.  More accurately imagine, two people starting out at 
@@ -161,13 +161,13 @@ match$score - integer between 0 and 100 indicating confidence in segment match.
 	      100 = extremely confident. 0 = exceedingly unlikely the match is correct.  
 	      This overall match score is obtained by combining name match, geo match, and 
 	      bearing match scores.
-match$scoreBearing1 - integer between 0 and 100 based on match$avgBearingDelta
-match$scoreBearing2 - integer between 0 and 100 rating similarity of the segment 
+match$score_bearing1 - integer between 0 and 100 based on match$avgBearingDelta
+match$score_bearing2 - integer between 0 and 100 rating similarity of the segment 
 		      bearings at the end points.
-match$scoreGeo1 - integer between 0 and 100 rating similarity of the segment geometries based 
+match$score_geo1 - integer between 0 and 100 rating similarity of the segment geometries based 
 		  on match$divergence.
-match$scoreGeo2 - integer between 0 and 100 rating similarity of segment geometries based on 
+match$score_geo2 - integer between 0 and 100 rating similarity of segment geometries based on 
 		  ratio of match$divergence to the segment length. 
-match$scoreName - integer between 0 and 100 rating similarity of names between this and matched segment. 
+match$score_name - integer between 0 and 100 rating similarity of names between this and matched segment. 
  		  It is obtained from the ratio of the levenshtein edit distance to the name length.
 

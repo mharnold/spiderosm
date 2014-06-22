@@ -84,7 +84,7 @@ def test():
 
     write(features,fname, col_specs=col_specs, title='Test Table')
     rows = read_table(fname)
-    print 'rows', rows
+    #print 'rows', rows
     assert len(rows) == 5
     assert rows[0][0] == 'Test Table'
     assert rows[1] == ['name','CATEGORY']
