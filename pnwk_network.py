@@ -86,6 +86,18 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         seg.to_jct = self._add_connection(to_jct_id, seg, start=False)
         self.segs[seg_id] = seg
 
+    # explicit add jct not necessary - useful mainly for adding tags.
+    # multiple adds of same jct_id ok.  point needs to match, tags are updated on each call
+    # qualifiedTags = tags with namespace prefixes.
+    def add_jct(self, jct_id, point, tags=None, qualifiedTags=None):
+        if not self.jcts.has_key(jct_id): self._add_jct(jct_id, point)
+        jct = self.jcts[jct_id]
+        assert jct.point == point
+
+        tags = self.add_namespace(tags,self.client_name_space)
+        if qualifiedTags: tags.update(qualifiedTags)
+        jct.tags.update(tags)
+
     def split_seg(self, seg, d, fromBeginning, new_jct_id=None):
         if not new_jct_id: new_jct_id = self._gen_jct_id()
         assert new_jct_id < 0
@@ -180,27 +192,40 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             geometry = feature['geometry']
             properties = feature['properties']
 
-            if geometry['type'] != 'LineString':
-                # not reading jcts yet.
-                continue
-            seg_id = feature['id']
-            points = [tuple(p) for p in geometry['coordinates']]
-            from_jct_id = properties[nsp + 'from_jct_id']
-            to_jct_id = properties[nsp + 'to_jct_id']
-            points = [tuple(p) for p in geometry['coordinates']]
-            try:
-                names = properties[nsp + 'name'].split(';')
-            except KeyError:
-                names = ()
+            if geometry['type'] == 'Point':
+                assert geometry['type'] == 'Point'
+                jct_id = feature['id']
+                point = tuple(geometry['coordinates'])
 
-            # filter out pnwk properties
-            tags={}
-            for (key,value) in properties.items():
-                (ns, name) = self.split_off_namespace(key) 
-                if ns == nsp: continue
-                tags[key] = value
+                # filter out pnwk properties
+                tags={}
+                for (key,value) in properties.items():
+                    (ns, name) = self.split_off_namespace(key) 
+                    if ns == nsp: continue
+                    tags[key] = value
+                #print 'tags',tags
+                self.add_jct(jct_id, point, qualifiedTags=tags)
 
-            self.add_seg(seg_id, from_jct_id, to_jct_id, points, names=names, qualifiedTags=tags)
+            else:
+                assert geometry['type'] == 'LineString'
+                seg_id = feature['id']
+                points = [tuple(p) for p in geometry['coordinates']]
+                from_jct_id = properties[nsp + 'from_jct_id']
+                to_jct_id = properties[nsp + 'to_jct_id']
+                points = [tuple(p) for p in geometry['coordinates']]
+                try:
+                    names = properties[nsp + 'name'].split(';')
+                except KeyError:
+                    names = ()
+
+                # filter out pnwk properties
+                tags={}
+                for (key,value) in properties.items():
+                    (ns, name) = self.split_off_namespace(key) 
+                    if ns == nsp: continue
+                    tags[key] = value
+
+                self.add_seg(seg_id, from_jct_id, to_jct_id, points, names=names, qualifiedTags=tags)
 
     def read_geojson(self, filename, quiet=False): 
         if not quiet: print 'Reading', filename
@@ -343,6 +368,9 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
             if 'import_src' in d:
                 d[ns + 'import_src_id'] = d['import_src'].jct_id
                 del d['import_src']
+            if 'export_count' in d:
+                d[ns + 'export_count'] = d['export_count']
+                del d['export_count']
             return d
 
         def names(self):
@@ -371,6 +399,10 @@ def test_setup_g(units=None):
     g.add_seg(1, 10, 11, test_points, names=['foo',
         "NE HALSEY ST FRONTAGE RD",
         "Northeast Halsey Street Frontage Road"])
+
+    tags = { 'ele':1000, 'signage':'some' }
+    g.add_jct(10, g.segs[1].points[0], tags=tags)
+
     g.check()
     return g
 
@@ -386,6 +418,12 @@ def test_add_seg():
     assert seg.points[1] == test_points[1]
     assert seg.from_jct.jct_id == 10
     assert seg.to_jct.jct_id == 11
+
+def test_add_jct():
+    g = test_setup_g()
+    #print 'jcts[10].tags', g.jcts[10].tags
+    assert g.jcts[10].tags['g$signage'] == 'some'
+    assert g.jcts[10].tags['g$ele'] == 1000
 
 def test_geo_interface():
     g = test_setup_g()
@@ -412,6 +450,8 @@ def test_read_write():
     assert seg.points[1] == test_points[1]
     assert seg.from_jct.jct_id == 10
     assert seg.to_jct.jct_id == 11
+    assert g2.jcts[10].tags['g$signage'] == 'some'
+    assert g2.jcts[10].tags['g$ele'] == 1000
     g2.check()
     
     g2.write_geojson(fname2)
@@ -423,6 +463,8 @@ def test_read_write():
     assert seg.points[1] == test_points[1]
     assert seg.from_jct.jct_id == 10
     assert seg.to_jct.jct_id == 11
+    assert g2.jcts[10].tags['g$signage'] == 'some'
+    assert g2.jcts[10].tags['g$ele'] == 1000
     g3.check()
 
     # cleanup
@@ -460,6 +502,7 @@ def test():
     test_units()
     test_id_gen()
     test_add_seg()
+    test_add_jct()
     test_geo_interface()
     test_read_write()
     test_get_jcts_near_point()

@@ -26,7 +26,7 @@ def test():
     paths = ( '~','.' )
     #read_config_files(fns,paths)
     #print 'settings', settings
-    print 'config test PASS.'
+    print 'config PASS'
 
 #doit
 test()

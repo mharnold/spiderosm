@@ -174,7 +174,7 @@ class OSMData(object):
         way = self.ways[way_id]
         points = [self.nodes[node_id].coords for node_id in way.node_ids]
         geometry = geojson.LineString(points)
-        properties = {'wayId' : way_id}
+        properties = {'way_id' : way_id}
         properties.update(way.tags)
         return geojson.Feature(geometry=geometry, id=way_id, properties=properties)
     
@@ -193,10 +193,23 @@ class OSMData(object):
         f.close()
         
     # segments split at junctions
-    def create_path_network(self,name=None,props=None):
+    # all attributes (keys) copied unless props/node_props specified.
+    def create_path_network(self, name=None, seg_props=None, jct_props=None):
         if not name: name='osm'
         nwk = pnwk.PNwk(name=name)
         num_segs=0
+
+        def add_node_tags(nwk, node_id, point, jct_props):
+            node = nwk.jcts[node_id]
+            tags = {'node_id': node_id}
+            if not jct_props:
+                tags.update(node.tags)
+            else:
+                for prop in jct_props:
+                    if prop in node.tags: 
+                        tags[prop] = node.tags[prop]
+
+            nwk.add_jct(node_id, point, tags=tags)
 
         # process in sorted order, so that result is the same from run to run, despite multi-core processing
         way_ids = self.ways.keys()
@@ -222,23 +235,23 @@ class OSMData(object):
 			points.append(node.coords)
 			if len(points)<2 or (i!=last and len(node.way_ids)<2): continue
                         
-                        # tags
-                        tags = {'wayId':way_id}
-                        if not props:
+                        #tags
+                        tags = {'way_id':way_id}
+                        if not seg_props:
                             tags.update(way.tags)
                         else:
-                            for prop in props:
+                            for prop in seg_props:
                                 if prop in way.tags: 
                                     tags[prop] = way.tags[prop]
 
                         num_segs += 1  # segment number used as id
                         #print 'adding segment', num_segs, 'names=', names
                         nwk.add_seg(num_segs, snode_id, node_id, points, names=names, tags=tags)
-                        nwk.jcts[snode_id].tags['nodeId'] = snode_id
-                        nwk.jcts[node_id].tags['nodeId'] = node_id
+                        add_node_tags(nwk, snode_id, points[0], jct_props)
+                        add_node_tags(nwk, node_id, points[-1], jct_props)
 
-			snode_id = node_id;
-			points = [node.coords]
+                        snode_id = node_id;
+                        points = [node.coords]
         print 'segments added:', num_segs
         return nwk
 

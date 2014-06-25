@@ -77,7 +77,7 @@ def match_berkeley():
     #db = spatialite.Slite(os.path.join(out_dir, conf['project'] + '.sqlite'))
 
     # CITY 
-    if True: 
+    if False: 
         # DOWNLOAD BERKELEY CITY DATA
         misc.update_file_from_url(filename=paths['city_zip'],url=paths['city_url'])
         misc.unzip(paths['city_zip'])
@@ -85,7 +85,7 @@ def match_berkeley():
         build_city_network()
     
     # OSM
-    if True:
+    if False:
         # DOWNLOAD UP-TO-DATE OSM DATA
         misc.update_file_from_url(filename=paths['osm'],url=paths['osm_url'])
 
@@ -101,7 +101,7 @@ def match_berkeley():
         build_osm_network(clip_rect=city_bbox_buffered,target_proj=conf['project_proj4text'])
 
     # MATCH
-    if True:
+    if False:
         if not city_nwk:
             city_nwk = pnwk.PNwk(name='city',filename=paths['city_network'],units='meters')
         if not osm_nwk: 
@@ -167,7 +167,7 @@ def mismatched_names_report():
         if props.get('match$score_name',100)==100: return False
         if 'osm$verified:name' in props: return False
         if props.get('osm$source:name'): return False
-        props['report$wayURL'] = 'http://www.openstreetmap.org/way/%d' % props['osm$wayId']
+        props['report$wayURL'] = 'http://www.openstreetmap.org/way/%d' % props['osm$way_id']
         return True
 
     log('generating mismatched name report...')
@@ -188,7 +188,7 @@ def mismatched_names_report():
     webmap_specs= [
             ('osm', 'TEXT', 'osm_pnwk$name'),
             ('city', 'TEXT', 'city_pnwk$name'),
-            ('wayId', 'BIGINT', 'osm$wayId'),
+            ('wayId', 'BIGINT', 'osm$way_id'),
             ('fixme', 'TEXT', 'osm$fixme:name')
             ]
     webmap = geofeatures.filter_features(mismatches, 
@@ -206,10 +206,11 @@ def mismatched_names_report():
     conf['project_projection'].project_geo_features(webmap,rev=True)
     
     # write out geojson for webmap
-    #geo = geojson.FeatureCollection(webmap)
+    geo = geojson.FeatureCollection(webmap)
     fname = os.path.join(conf['out_dir'],'name_mismatches.geojson')
     with open(fname, 'w') as f:
-        geojson.dump(webmap,f,indent=2,sort_keys=True)
+        #geojson.dump(webmap,f,indent=2,sort_keys=True)
+        geojson.dump(geo,f,indent=2,sort_keys=True)
 
     # make unique and sorted
     unique = []
