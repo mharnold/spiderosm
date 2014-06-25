@@ -145,12 +145,12 @@ def _test_interpolate():
     assert interpolate(ls, 39) == (1.0,0.0)
 
 # returns (maxSep,avg_bearing_delta)
-def divergence(points1,points2):
+def divergence(points1, points2, delta=3):
     len1 = length(points1)
     len2 = length(points2)
 
     if len1<len2: 
-        return divergence(points2,points1)
+        return divergence(points2,points1, delta=delta)
     assert len1 >= len2
 
     sls1 = shapely_linestring(points1)
@@ -180,7 +180,7 @@ def divergence(points1,points2):
         p2_prev = p2
 
         if d1==len1: break
-        d1 += 10
+        d1 += delta
         d1 = min(d1,len1)
 
     #print 'cum_bdelta', cum_bdelta
@@ -199,7 +199,7 @@ def _test_divergence():
 
     points5 = [(0,0),(20,20),(40,0),(400,0)]
     assert divergence(points3,points4)[1] == 0
-    assert 5.7 < divergence(points4,points5)[1] < 5.8
+    assert 5.7 < divergence(points4,points5,delta=10)[1] < 5.8
 
 # distance along points nearest to point
 def project(points,point):

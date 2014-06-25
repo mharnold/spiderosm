@@ -101,7 +101,7 @@ def match_berkeley():
         build_osm_network(clip_rect=city_bbox_buffered,target_proj=conf['project_proj4text'])
 
     # MATCH
-    if False:
+    if True:
         if not city_nwk:
             city_nwk = pnwk.PNwk(name='city',filename=paths['city_network'],units='meters')
         if not osm_nwk: 

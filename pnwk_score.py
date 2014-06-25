@@ -23,13 +23,15 @@ class PNwkScore(pnwk_network.PNwkNetwork):
 
         def _score_geo_match(self):
             if not self.match: return
+            f = self.network.units_per_meter
+            delta = 3.0*f # distance between samples
             if self.match_rev:
-                (div,avg_bearing_delta) = geo.divergence(self.points,self.match.points[::-1])
+                (div,avg_bearing_delta) = geo.divergence(self.points,self.match.points[::-1],delta)
             else:
-                (div, avg_bearing_delta) = geo.divergence(self.points,self.match.points)
+                (div, avg_bearing_delta) = geo.divergence(self.points,self.match.points,delta)
 
-            # p1 based on divergence
-            p1 = 1.0 - min(div,100.0)/100.0
+            # p1 based on divergence  (div of 30 meters or more scores 0)
+            p1 = 1.0 - min(div*f,30.0)/30.0
             #print 'p1,div', p1, div
 
             # p2 based on ratio of divergenece to segment length
