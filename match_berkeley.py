@@ -77,7 +77,7 @@ def match_berkeley():
     #db = spatialite.Slite(os.path.join(out_dir, conf['project'] + '.sqlite'))
 
     # CITY 
-    if False: 
+    if True: 
         # DOWNLOAD BERKELEY CITY DATA
         misc.update_file_from_url(filename=paths['city_zip'],url=paths['city_url'])
         misc.unzip(paths['city_zip'])
@@ -85,7 +85,7 @@ def match_berkeley():
         build_city_network()
     
     # OSM
-    if False:
+    if True:
         # DOWNLOAD UP-TO-DATE OSM DATA
         misc.update_file_from_url(filename=paths['osm'],url=paths['osm_url'])
 

@@ -178,6 +178,6 @@ def test():
         assert match_score(['A St'],['B Street']) == 75.0
 
 
-	print 'cannames PASS.'
+	print 'cannames PASS'
 #doit
 test()
