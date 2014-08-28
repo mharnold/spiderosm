@@ -59,7 +59,7 @@ Import of OSM data is supported via the imposm parser (osm.py)
 
 COORDINATE REFERENCE SYSTEMS
 ============================
-CRS information is not currently determined from input files, and they is no
+CRS information is not currently determined from input files, and there is no
 automatic translation.  Input files should be in a locally appropriate
 projection.  OSM data is translated from latlon to the local projection by the
 code in osm.py  See the examples (match_berkeley.py and
@@ -96,16 +96,25 @@ below):
  http://docs.python-guide.org/en/latest/starting/install/win/
 
 Install the packages spiderosm depends on with the python installer (pip)
-% pip install pyshp
+% pip install pyproj
+% pip install numpy
+% pip install shapely
+  shapely requires geos library, on Mac: "%brew install geos"  
+% pip install pylev
 % pip install geojson
 % pip install imposm
-% pip install pylev
-% pip install Shapely
+  imposm loads psycopg2 (postgis interface!
+  imposm needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
+  impost needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet"
+% pip install pyspatialite
+  if trouble with this, comment out spatialite in make_portland_osm_pnwk.py
+ % pip install pyshp
+  for importing shapefiles
 
 (For windows, instructions for installing pip are at the same link given
 above.)
 Additional packages are probably needed.  These will be 'announced' to you when
-you at run time.
+they are found missing at run time.
 
 If you haven't done so already, clone (download) spiderOSM from the github
 repository, and cd to that directory.

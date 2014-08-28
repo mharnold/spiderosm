@@ -139,6 +139,10 @@ def canonical_street_name(name):
             new_words.append('MC' + words[i+1])
             skip=True
             continue
+        if words[i] == 'LE':
+            new_words.append('LE' + words[i+1])
+            skip=True
+            continue
         new_words.append(words[i])
     words = new_words
 
@@ -172,7 +176,7 @@ def test():
         test_can("MARTIN LUTHER KING  JUNIOR BLVD","MARTIN LUTHER KING JR BLVD")
         test_can("Mc Gee Street", "McGee Street")
         test_can("Saint Alban's Road", "ST ALBANS RD")
-
+        test_can("Le Roy Avenue", "LeRoy Avenue")
 
         # 'fuzzy matching' (edit distance)
         assert match_score(['A St'],['B Street']) == 75.0

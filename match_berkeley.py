@@ -23,7 +23,7 @@ import shp2geojson
 #import spatialite
 
 # CONFIG
-# can be overwritten in config.spiderosm.py files
+# can be overwritten in config files (e.g. ./config.spiderosm.json)
 def setup():
     conf = config.settings
 
