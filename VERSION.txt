@@ -1,1 +1,6 @@
-v0.0.0
+v0.0.1
+
+SPIDEROSM VERSION HISTORY
+0.0.0  emailed to mapbox  (not on github)
+0.0.1  fixed osm pnwk jct attribution problem.
+

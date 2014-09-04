@@ -34,6 +34,7 @@ class OSMData(object):
         if self.proj: coords = self.proj.project_point(coords)
         if self.clip_rect and not geo.point_in_rect_q(coords,self.clip_rect): return
 	self.nodes[osmId] = Node(coords, tags=tags)
+        #if tags: print 'DEB _parse_node, osmId:',osmId,'tags:',tags
 
     # callback for coords (called for ALL nodes, both those with and without tags.)
     def _parse_coords(self, coords_in):
@@ -200,7 +201,7 @@ class OSMData(object):
         num_segs=0
 
         def add_node_tags(nwk, node_id, point, jct_props):
-            node = nwk.jcts[node_id]
+            node = self.nodes[node_id]
             tags = {'node_id': node_id}
             if not jct_props:
                 tags.update(node.tags)
@@ -214,6 +215,7 @@ class OSMData(object):
         # process in sorted order, so that result is the same from run to run, despite multi-core processing
         way_ids = self.ways.keys()
         way_ids.sort()
+        #print 'DEB way_ids:', way_ids
 	for way_id in way_ids:
                 way = self.ways[way_id]
 		snode_id = way.node_ids[0]
@@ -245,7 +247,6 @@ class OSMData(object):
                                     tags[prop] = way.tags[prop]
 
                         num_segs += 1  # segment number used as id
-                        #print 'adding segment', num_segs, 'names=', names
                         nwk.add_seg(num_segs, snode_id, node_id, points, names=names, tags=tags)
                         add_node_tags(nwk, snode_id, points[0], jct_props)
                         add_node_tags(nwk, node_id, points[-1], jct_props)
