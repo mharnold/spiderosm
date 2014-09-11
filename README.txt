@@ -1,5 +1,6 @@
 SpiderOSM - README.txt
 http://spiderosm.org
+https://github.com/mharnold/spiderosm
 https://groups.google.com/forum/#!forum/spiderosm
 
 SpiderOSM is a python library for matching path (street) networks, e.g. OpenStreetMaps
@@ -16,8 +17,7 @@ See LICENSE.txt for details
 In addition, please note:
 
 DATA SOURCES HAVE LICENSE RESTRICITONS THAT MAY RESTRICT RECOMBINATION,
-REPUBLISHING ETC.  THE INTERACTION OF THESE LICENSES CAN BE COMPLICATED!  FOR
-EXAMPLE OSM AND RLIS TERMS OF USE APPEAR INCOMPATIBLE AT THIS TIME (JUNE 2014.)
+REPUBLISHING ETC.  THE INTERACTION OF THESE LICENSES CAN BE COMPLICATED!  
 IT IS YOUR RESPONSIBILITY TO KNOW AND ABIDE BY LICENSE RESTIRCTIONS OF ANY DATA 
 YOU MAKE USE OF.
 
