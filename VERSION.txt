@@ -1,6 +1,7 @@
-v0.0.1
+v0.0.2
 
 SPIDEROSM VERSION HISTORY
-0.0.0  emailed to mapbox  (not on github)
-0.0.1  fixed osm pnwk jct attribution problem.
+v0.0.0  emailed to mapbox  (not on github)
+v0.0.1  fixed osm pnwk jct attribution problem.  first github version
+v0.0.2  added match_portland.py top level, modified centerline.py to discard any z-coordinates in input.
 

@@ -24,8 +24,29 @@ YOU MAKE USE OF.
 
 EXAMPLES
 ========
-match_berkeley.py 
+
+match_berkeley.py
+-----------------
+Downloads Berkeley centerline and latest OSM California extract, clips OSM to
+(buffered) extent of Berkeley centerline data, generates path networks for
+both and matches them.  Also generates mismatched name report (.csv) and
+geojson file.   
+(By default all output/intermediary files are geojson.)
+
 make_portland_osm_pnwk.py
+-------------------------
+Downloads latest Oregon OSM extract, clips to Portland area, and generates a
+current osm path network for that area. 
+(By default all output/intermediary files are geojson.)
+
+match_portland.py
+-----------------
+Requires manual download of RLIS streets layer (centerline) data.
+Downloads latest Oregon OSM extract and clips to (buffered) RLIS extent.
+Generates path networks for RLIS (city) data and OSM data, and matches them.
+Also generates mismatched name report (.csv) and geojson file.
+By default, output and intermediary files are both generated in geojson, and added to a PostGIS
+database.)
 
 
 DATA FORMATS
@@ -77,6 +98,12 @@ format.  Path networks for OSM data can be generated with osm.py  Path Networks
 for Berkeley or RLIS centerline data can be generated with centerline.py
 Customization for import of other centerline data is hopefully straight
 forward.
+
+
+Unicode / Internationalization
+==============================
+NOTE:  Issues with handling non-ascii strings in input data right now!  This is being
+actively addressed!
 
 
 INSTALLING AND RUNNING

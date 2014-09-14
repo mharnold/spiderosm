@@ -15,6 +15,7 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,
     num_jcts=[0]  # this is a hack to get around scoping issues
     jct_ids = {}  # indexed by jct coords
     skipped_features = []
+    max_input_dim = 0
 
     # return jct_id for point (assigning new one if needed)
     def jct_id(point):
@@ -41,7 +42,11 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,
         for part in parts:
             num_segs += 1
             seg_id = num_segs
-            points = [tuple(l) for l in part]
+            points = []
+            for l in part:
+                #code assumes 2d coords, retaining only first 2 coords of input.
+                points.append(tuple(l[:2]))
+                max_input_dim = max(max_input_dim,len(l))
             start_point = points[0];
             end_point = points[-1]
 
@@ -58,9 +63,13 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,
                     tags=tags
                     )
    
-    if len(skipped_features) > 0  and  not quiet:
+    if len(skipped_features) > 0  and not quiet:
         print '%d features skipped.' % len(skipped_features)
         print 'first skipped feature:',feature
+
+    if max_input_dim > 2 and not quiet:
+        print 'WARNING: Input coordinates up to %d dimensional.' % max_input_dim
+        print 'Retaining only first 2 dimensions.'
 
     return city_street_network
 
@@ -154,7 +163,7 @@ def test():
     {
       "geometry": {
         "type": "LineString", 
-        "coordinates": [ [100,110],[200,210] ]
+        "coordinates": [ [100,110, 100],[200,210, 110] ]
         }, 
       "type": "Feature", 
       "properties": {
@@ -167,7 +176,7 @@ def test():
     {
       "geometry": {
         "type": "LineString", 
-        "coordinates": [ [100,110],[200,210] ]
+        "coordinates": [ [100,110, 100],[200,210] ]
         }, 
       "type": "Feature", 
       "properties": {
