@@ -31,13 +31,14 @@ Downloads Berkeley centerline and latest OSM California extract, clips OSM to
 (buffered) extent of Berkeley centerline data, generates path networks for
 both and matches them.  Also generates mismatched name report (.csv) and
 geojson file.   
-(By default all output/intermediary files are geojson.)
+By default all output/intermediary files are written as geojson only.
 
 make_portland_osm_pnwk.py
 -------------------------
 Downloads latest Oregon OSM extract, clips to Portland area, and generates a
 current osm path network for that area. 
-(By default all output/intermediary files are geojson.)
+By default all output/intermediary files are both written as geojson and
+spatialite.
 
 match_portland.py
 -----------------
@@ -45,8 +46,8 @@ Requires manual download of RLIS streets layer (centerline) data.
 Downloads latest Oregon OSM extract and clips to (buffered) RLIS extent.
 Generates path networks for RLIS (city) data and OSM data, and matches them.
 Also generates mismatched name report (.csv) and geojson file.
-By default, output and intermediary files are both generated in geojson, and added to a PostGIS
-database.)
+By default, output and intermediary files are both written as geojson, and added to a PostGIS
+database.
 
 
 DATA FORMATS

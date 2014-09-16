@@ -20,7 +20,7 @@ import misc
 import osm
 import pnwk
 import postgis
-import shp2geojson
+#import shp2geojson
 #import spatialite
 
 # CONFIG
