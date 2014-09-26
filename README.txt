@@ -101,12 +101,6 @@ Customization for import of other centerline data is hopefully straight
 forward.
 
 
-Unicode / Internationalization
-==============================
-NOTE:  Issues with handling non-ascii strings in input data right now!  This is being
-actively addressed!
-
-
 INSTALLING AND RUNNING
 ======================
 All the instructions below are from a command prompt (Terminal app)

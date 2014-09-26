@@ -2,6 +2,7 @@
 Network base for Path Network
 '''
 
+import json
 import os
 import pdb
 import tempfile
@@ -230,7 +231,11 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
     def read_geojson(self, filename, quiet=False): 
         if not quiet: print 'Reading', filename
         f = open(filename+self.FILE_EXTENSION,'r')
-        geo = geojson.load(f)
+        #as of 9/26/2014 geojson.load chokes on unicode keys.  
+        #geojson.load returns string keys and values, while json.load returns unicode keys and values.
+        #Not sure of all the ramifications of this?
+        #geo = geojson.load(f)
+        geo = json.load(f)
         f.close()
         self._parse_geojson(geo)
 
@@ -400,7 +405,7 @@ def test_setup_g(units=None):
         "NE HALSEY ST FRONTAGE RD",
         "Northeast Halsey Street Frontage Road"])
 
-    tags = { 'ele':1000, 'signage':'some' }
+    tags = { 'ele':1000, 'signage':'some', u'osm$stamv\xe4g': u'yes' }
     g.add_jct(10, g.segs[1].points[0], tags=tags)
 
     g.check()

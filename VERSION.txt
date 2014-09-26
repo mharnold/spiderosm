@@ -1,6 +1,8 @@
-v0.0.3
+v0.0.4
 
 SPIDEROSM VERSION HISTORY
+v0.0.4  fixed problem reading pnwks with non-ascii property keys. (Switched to
+json.load() until geojson.load() fixed.)
 v0.0.3  removed spatialite dependency from match_portland.py, slight improvements to README.
 v0.0.2  added match_portland.py top level, modified centerline.py to discard any z-coordinates in input.
 v0.0.1  fixed osm pnwk jct attribution problem.  first github version
