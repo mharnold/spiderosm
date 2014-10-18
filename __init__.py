@@ -1,0 +1,1 @@
+#spiderOSM package init
