@@ -155,7 +155,11 @@ def divergence(points1, points2, delta=3):
 
     sls1 = shapely_linestring(points1)
     sls2 = shapely_linestring(points2)
-    f = len2/len1
+    try:
+        f = len2/len1
+    except ZeroDivisionError:
+        assert len1==0 and len2==0
+        f= 1
     d1=0
     maxSep = 0
     p1_prev = None
@@ -185,7 +189,11 @@ def divergence(points1, points2, delta=3):
 
     #print 'cum_bdelta', cum_bdelta
     #print 'num_b', num_b
-    return (maxSep, (cum_bdelta+0.0)/num_b)
+    try:
+        avg_bdelta = (cum_bdelta+0.0)/num_b
+    except ZeroDivisionError:
+        avg_bdelta = 0
+    return (maxSep, avg_bdelta)
 
 def _test_divergence():
     points1 = [(0,10),(100,15),(200,10)]
@@ -200,6 +208,11 @@ def _test_divergence():
     points5 = [(0,0),(20,20),(40,0),(400,0)]
     assert divergence(points3,points4)[1] == 0
     assert 5.7 < divergence(points4,points5,delta=10)[1] < 5.8
+
+    points6 = [(0,0), (0,0)]
+    points7 = [(10,0), (10,0)]
+    assert divergence(points6,points7)[0] == 10 
+    assert divergence(points6,points7)[1] == 0 
 
 # distance along points nearest to point
 def project(points,point):

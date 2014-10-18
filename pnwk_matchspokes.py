@@ -17,12 +17,13 @@ class PNwkMatchSpokes(pnwk_matchjcts.PNwkMatchJcts):
     # match nwk2 into nwk1
     # matches are searched for in radius d and must be unique within that radius in both networks
     def spoke_crawl(self, star_jct_match_list, msg=None, quiet=False):
-        if msg and not quiet: print 'SPOKECRAWL:',msg
+        #if msg and not quiet: print 'SPOKECRAWL:',msg
         new_jct_matches = star_jct_match_list
         passNum = 0
         while len(new_jct_matches)>0:
             passNum += 1
-            if not quiet: 
+            #if not quiet: 
+            if False:
                 print 'pass %d, processing %d matched junctions:' % (passNum, len(new_jct_matches))
             new_jct_matches = match_spokes(new_jct_matches)
 

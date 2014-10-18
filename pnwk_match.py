@@ -66,7 +66,9 @@ class PNwkMatch(pnwk_matchspokes.PNwkMatchSpokes):
         statsAfter = nwk2.match_stats(quiet=True)
         num_segs_matched = statsAfter['num_segs_matched']
         delta = statsAfter['num_segs_matched'] - statsBefore['num_segs_matched']
-        if not quiet: print '===== new segs matches: %d, total seg matches: %d' % (
+        #if not quiet: 
+        if False:
+            print '===== new segs matches: %d, total seg matches: %d' % (
             delta, num_segs_matched)
 
         # Score matches

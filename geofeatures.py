@@ -1,7 +1,10 @@
 import copy
+import numbers
 import pdb
 
 import geojson
+
+import geo
 
 def _geo_features(geo):
     features = geo
@@ -33,7 +36,26 @@ def filter_features(features, feature_func=None, geom_type=None, col_specs=None)
 
     return new_features
 
+# allows for nested cooordinate lists
+def coordinates_intersect_rect_q(coords, rect):
+    if isinstance(coords[0][0], numbers.Number):
+        return geo.points_intersect_rect_q(coords, rect)
+    else:
+        # nested coord lists
+        for l in coords:
+            if coordinates_intersect_rect_q(l, rect): return True
+        return False
+
+def _test_coordinates_intersect_rect_q():
+    coords1 = [[0,0], [10,10], [20,20]]
+    coords2 = [[100,100], [20,20]]
+    coords_l2 = [coords1, coords2]
+    assert coordinates_intersect_rect_q(coords1,[15,15,30,30])
+    assert not coordinates_intersect_rect_q(coords1,[25,15,30,30])
+    assert coordinates_intersect_rect_q(coords_l2,[90,90,101,101])
+
 def test():
+    _test_coordinates_intersect_rect_q()
     features = [
     {
       "geometry": {

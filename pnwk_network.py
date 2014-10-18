@@ -230,20 +230,15 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
 
     def read_geojson(self, filename, quiet=False): 
         if not quiet: print 'Reading', filename
-        f = open(filename+self.FILE_EXTENSION,'r')
-        #as of 9/26/2014 geojson.load chokes on unicode keys.  
-        #geojson.load returns string keys and values, while json.load returns unicode keys and values.
-        #Not sure of all the ramifications of this?
-        #geo = geojson.load(f)
-        geo = json.load(f)
-        f.close()
+        with open(filename+self.FILE_EXTENSION,'r') as f:
+            # needs geojson>1.0.7, for non-ascii property keys
+            geo = geojson.load(f)
         self._parse_geojson(geo)
 
     def write_geojson(self, name=None):
         if not name: name=self.name
-        f = open(name+self.FILE_EXTENSION,'w')
-        geojson.dump(self.__geo_interface__,f,indent=2,sort_keys=True)
-        f.close()
+        with open(name+self.FILE_EXTENSION,'w') as f:
+            geojson.dump(self.__geo_interface__,f,indent=2,sort_keys=True)
 
     def get_bbox(self):
         bbox = geo.BBox() 

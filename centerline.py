@@ -3,10 +3,11 @@ Street Centerline Data to Path Network conversion
 '''
 import pdb
 
+import geo
 import pnwk
 
 ''' features in python geo interface format (geojson) '''
-def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,quiet=False):
+def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,quiet=False, clip_rect=None):
     if not quiet: print 'num centerline features:', len(features)
     #print 'DEBUG random city feature:',features[10]
 
@@ -58,6 +59,8 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,
                     if prop in feature['properties']: 
                         tags[prop] = feature['properties'][prop]
 
+            if clip_rect and not geo.points_intersect_rect_q(points, clip_rect): continue 
+
             city_street_network.add_seg(seg_id, jct_id(start_point), jct_id(end_point), points,
                     names=namesFunc(feature),
                     tags=tags
@@ -73,7 +76,7 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,
 
     return city_street_network
 
-def rlis_pnwk(features,name=None,props=None,quiet=False):
+def rlis_pnwk(features,name=None,props=None,quiet=False,clip_rect=None):
     def rlis_names(feature):
         def _rlis_names0(prefix,street_name,ftype):
             #print 'DEBUG _rlis_names0 prefix,street_name,ftype', prefix,street_name,ftype
@@ -105,9 +108,10 @@ def rlis_pnwk(features,name=None,props=None,quiet=False):
             props=props,
             namesFunc=rlis_names,
             name=name,
-            quiet=quiet)
+            quiet=quiet,
+            clip_rect=clip_rect)
 
-def berkeley_pnwk(features, name=None, props=None, quiet=False):
+def berkeley_pnwk(features, name=None, props=None, quiet=False, clip_rect=None):
     def berkeley_names(feature): 
         names = []
         props = feature['properties']
@@ -143,7 +147,8 @@ def berkeley_pnwk(features, name=None, props=None, quiet=False):
             namesFunc=berkeley_names,
             filter_func=berkeley_filter,
             name=name,
-            quiet=quiet)
+            quiet=quiet,
+            clip_rect=clip_rect)
 
 def test():
     features = [
@@ -193,6 +198,12 @@ def test():
     assert 'I 80 E UNIVERSITY RAMP' in names
     assert 'I 80' in names
     assert len(pnwk.segs[2].names_text()) == 0
+
+    # test clipping
+    clip_rect = [ 15,15,25,25 ] 
+    pnwk = berkeley_pnwk(features,quiet=True,clip_rect=clip_rect)
+    assert len(pnwk.segs) == 1
+    assert 'I 80 E UNIVERSITY RAMP' in pnwk.segs[1].names
 
     print 'centerline PASS'
 

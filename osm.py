@@ -189,9 +189,8 @@ class OSMData(object):
         return geojson.FeatureCollection(features)
 
     def write_geojson(self, name):
-        f = open(name+osm_geojson_file_extension,'w')
-        geojson.dump(self.__geo_interface__,f,indent=2)
-        f.close()
+        with open(name+osm_geojson_file_extension,'w') as f:
+            geojson.dump(self.__geo_interface__,f,indent=2)
         
     # segments split at junctions
     # all attributes (keys) copied unless props/node_props specified.

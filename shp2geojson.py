@@ -10,7 +10,9 @@ import json
 
 import shapefile #pip pyshp
 
-def shp2geojson(inFilename,outFilename):
+import geofeatures
+
+def shp2geojson(inFilename,outFilename,clip_rect=None):
     # read the shapefile
     reader = shapefile.Reader(inFilename)
     fields = reader.fields[1:]
@@ -20,7 +22,9 @@ def shp2geojson(inFilename,outFilename):
     for (sr, ss) in itertools.izip(reader.iterRecords(), reader.iterShapes()):
         atr = dict(zip(fieldNames, sr))
         geom = ss.__geo_interface__
-        features.append(dict(type='Feature', geometry=geom, properties=atr)) 
+        if not clip_rect or geofeatures.coordinates_intersect_rect_q(geom['coordinates'],clip_rect):
+            #print 'DEB geom:', geom
+            features.append(dict(type='Feature', geometry=geom, properties=atr)) 
  
     # write the geojson file
     jsonFile = open(outFilename, 'w')

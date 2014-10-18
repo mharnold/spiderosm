@@ -1,249 +1,59 @@
 '''
 Match Berkeley street centerline to OSM
 '''
-
-import cgi
-import datetime
-import json
 import os
 import pdb
 
-import geojson
+import spiderosm.centerline
+import spiderosm.config
+import spiderosm.match
+#import spiderosm.postgis
+#import spiderosm.spatialite
 
-import centerline
-import config
-import csvif
-import geo
-import geofeatures
-import misc
-import osm
-import pnwk
-#import postgis
-import shp2geojson
-#import spatialite
+def match_city():
+    project = 'berkeley'
 
-# CONFIG
-# can be overwritten in config files (e.g. ./config.spiderosm.json)
-def setup():
+    # allow out_dir and gis_data_dir to be set in config files
     conf = config.settings
-
-    conf['project'] = 'berkeley'
-    conf['project_proj4text'] = '+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs'
     conf['gis_data_dir'] = 'data'
-    conf['out_dir'] = os.path.join('data','berkeley')
-
-    #database
-    conf['db'] = False
-
+    conf['out_dir'] = os.path.join('data',project)
     config.read_config_files()
+    gis_data_dir = conf['gis_data_dir']
+    out_dir = conf['out_dir']
+    print 'gis_data_dir=%s out_dir=%s' % (gis_data_dir,out_dir)
 
-    conf['project_projection'] = geo.Projection(conf['project_proj4text'])
-    setup_paths(conf['gis_data_dir'],conf['out_dir'])
+    m = match.Match(
+            project=project,
+            proj4text='+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs',
+            units='meters',
+            #db = spiderosm.postgis.PGIS(project)
+            #db = spiderosm.spatialite.Slite(os.path.join(out_dir, project + '.sqlite'))
+            out_dir=out_dir)
 
-# FILE PATHS
-paths = {}
-def setup_paths(gis_data_dir, out_dir):
     #CITY DATA
     # source: http://www.ci.berkeley.ca.us/datacatalog/
-    paths['city_url'] = 'http://www.ci.berkeley.ca.us/uploadedFiles/IT/GIS/streets.zip'
-    paths['city_zip'] = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.zip')
-    paths['city_shp'] = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.shp')
-    paths['city_geojson'] = os.path.join(out_dir,'streets.geojson')
-    paths['city_network'] = os.path.join(out_dir,'city') # .pnwk.geojson
+    m.city_url = 'http://www.ci.berkeley.ca.us/uploadedFiles/IT/GIS/streets.zip'
+    m.city_zip = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.zip')
+    m.city_shp = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.shp')
+    m.city_geojson = os.path.join(out_dir,'streets.geojson')
+    m.centerline_to_pnwk = centerline.berkeley_pnwk
+    m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
     #OSM DATA
     #geofabrik extracts updated daily
-    paths['osm_url'] = 'http://download.geofabrik.de/north-america/us/california-latest.osm.pbf'
-    paths['osm'] = os.path.join(gis_data_dir,'osm','geofabrik.de','california-latest.osm.pbf')
-    paths['osm_network'] = os.path.join(out_dir,'osm') # .pnwk.geojson
+    m.osm_url = 'http://download.geofabrik.de/north-america/us/california-latest.osm.pbf'
+    m.osm = os.path.join(gis_data_dir,'osm','geofabrik.de','california-latest.osm.pbf')
+    m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
 
-def match_berkeley():
-    conf = config.settings
+    #OSM BASE (before name fixes)
+    #m.base = os.path.join(gis_data_dir,'osm','geofabrik.de','california-140401.osm.pbf')
+    #m.base_network = os.path.join(out_dir,'base') # .pnwk.geojson
 
-    city_nwk = None
-    osm_nwk = None
-    setup()
-
-    log('TOP')
-
-    # OUTPUT DIR
-    if not os.path.exists(conf['out_dir']): os.makedirs(conf['out_dir'])
-
-    #DATABASE
-    # if set write results (and intermediate files) to this database
-    global db
-    db=False
-    #db = postgis.PGIS(conf['project'])
-    #db = spatialite.Slite(os.path.join(out_dir, conf['project'] + '.sqlite'))
-
-    # CITY 
-    if True: 
-        # DOWNLOAD BERKELEY CITY DATA
-        misc.update_file_from_url(filename=paths['city_zip'],url=paths['city_url'])
-        misc.unzip(paths['city_zip'])
-
-        build_city_network()
-    
-    # OSM
-    if True:
-        # DOWNLOAD UP-TO-DATE OSM DATA
-        misc.update_file_from_url(filename=paths['osm'],url=paths['osm_url'])
-
-        # BBOX 
-        city_nwk = pnwk.PNwk(name='city',filename=paths['city_network'],units='meters')
-        city_bbox = city_nwk.get_bbox()
-        print 'city_bbox:', city_bbox
-        city_bbox_buffered = geo.buffer_box(city_bbox,1000) #buffer by 1000 meters
-        print 'city_bbox_buffered:', city_bbox_buffered
-        city_bbox_buffered_geo = conf['project_projection'].project_box(city_bbox_buffered, rev=True)
-        print 'city_bbox_buffered_geo:', city_bbox_buffered_geo
-
-        build_osm_network(clip_rect=city_bbox_buffered,target_proj=conf['project_proj4text'])
-
-    # MATCH
-    if True:
-        if not city_nwk:
-            city_nwk = pnwk.PNwk(name='city',filename=paths['city_network'],units='meters')
-        if not osm_nwk: 
-            osm_nwk = pnwk.PNwk(filename=paths['osm_network'],name='osm',units='meters')
-        match_networks(osm_nwk, city_nwk)
-    
-    # MISMATCHED NAMES REPORT
-    if True:
-        mismatched_names_report()
-
-    log('DONE.')
-
-def log(msg):
-    conf = config.settings
-    now = str(datetime.datetime.now())
-    print now,conf['project'],msg
-
-def build_city_network():
-    # CENTERLINE 
-    log('building city centerline network...')
-    #print prjinfo.prjinfo(city_shp_filename) need .prj extenion.
-    shp2geojson.shp2geojson(paths['city_shp'], paths['city_geojson'])
-    json_file = open(paths['city_geojson'])
-    city_geojson = json.load(json_file) 
-    json_file.close()
-    city_nwk = centerline.berkeley_pnwk(name='city',features=city_geojson['features'])
-    city_nwk.write_geojson(paths['city_network']) 
-    if db: db.write_pnwk(city_nwk)
-    log('building city centerline network... DONE')
-
-def build_osm_network(clip_rect=None,target_proj=None):
-    log('building OSM network...')
-    osm_data = osm.OSMData(paths['osm'], clip_rect=clip_rect, target_proj=target_proj)
-    osm_data.write_geojson(paths['osm_network']) # .osm.geojson
-    if db: 
-        db.write_geo(osm_data,'osm_ways',geometry_type='LineString')
-        db.write_geo(osm_data,'osm_nodes',geometry_type='Point')
-    osm_nwk = osm_data.create_path_network(name='osm')
-    osm_nwk.write_geojson(paths['osm_network']) # .pnwk.geojson
-    if db: 
-        db.write_pnwk(osm_nwk)
-    log('DONE building OSM network.')
-
-def match_networks(pnwk1, pnwk2):
-    conf = config.settings
-
-    log('matching %s and %s networks...' % (pnwk1.name, pnwk2.name))
-    pnwk1.match(pnwk2)
-    pnwk1.match_stats()
-    pnwk2.match_stats()
-    pnwk1.write_geojson(os.path.join(conf['out_dir'], pnwk1.name + '_matched'))
-    pnwk2.write_geojson(os.path.join(conf['out_dir'], pnwk2.name + '_matched'))
-    if db:
-        db.write_pnwk(pnwk1, name=pnwk1.name + '_matched')
-        db.write_pnwk(pnwk2, name=pnwk2.name + '_matched')
-    log('DONE matching %s and %s networks.' % (pnwk1.name, pnwk2.name))
-
-def mismatched_names_report():
-    conf = config.settings
-
-    def mismatchFunc(feature,props):
-        if props.get('match$score',0)<50: return False
-        if props.get('match$score_name',100)==100: return False
-        if 'osm$verified:name' in props: return False
-        if props.get('osm$source:name'): return False
-        props['report$wayURL'] = 'http://www.openstreetmap.org/way/%d' % props['osm$way_id']
-        return True
-
-    log('generating mismatched name report...')
-
-    # read in matched network
-    osm_matched = pnwk.PNwk(
-            filename=os.path.join(conf['out_dir'], 'osm_matched'),
-            name = 'osm',
-            units = 'meters')
-
-    # find mismatches
-    mismatches = geofeatures.filter_features(osm_matched, 
-            feature_func=mismatchFunc, 
-            geom_type='LineString')
-    print '%d (RAW) NAME MISMATCHES' % len(mismatches)
-
-    # filter props down for webmap
-    webmap_specs= [
-            ('osm', 'TEXT', 'osm_pnwk$name'),
-            ('city', 'TEXT', 'city_pnwk$name'),
-            ('wayId', 'BIGINT', 'osm$way_id'),
-            ('fixme', 'TEXT', 'osm$fixme:name')
-            ]
-    webmap = geofeatures.filter_features(mismatches, 
-            col_specs=webmap_specs)
-
-    # htlml quote TEXT property values to guard against injection attacks.
-    for feature in webmap:
-        props = feature.properties
-        for (name, t, ignore) in webmap_specs:
-            if t != 'TEXT': continue
-            if not name in props: continue
-            props[name] = cgi.escape(props[name])
-
-    # unproject for web map use
-    conf['project_projection'].project_geo_features(webmap,rev=True)
-    
-    # write out geojson for webmap
-    geo = geojson.FeatureCollection(webmap)
-    fname = os.path.join(conf['out_dir'],'name_mismatches.geojson')
-    with open(fname, 'w') as f:
-        #geojson.dump(webmap,f,indent=2,sort_keys=True)
-        geojson.dump(geo,f,indent=2,sort_keys=True)
-
-    # make unique and sorted
-    unique = []
-    pairs = {}
-    for feature in mismatches:
-        props = feature['properties']
-        pair = (props['osm_pnwk$name'], props['city_pnwk$name']) 
-        if pair in pairs: continue
-        unique.append(feature)
-        pairs[pair] = True
-    count = len(pairs)
-    print '%d UNIQUE NAME MISMATCHES' % count
-    def keyFunc(feature):
-        p=feature['properties']
-        return (p['osm_pnwk$name'], p['city_pnwk$name'])
-    unique.sort(key=keyFunc)
-
-    # write csv report
-    title = 'Berkeley area name mismatches between city centerline and OSM (dateGenerated: %s)'  
-    title = title % misc.date_ymdhms()
-
-    csv_specs= [
-            ('osm', 'TEXT', 'osm_pnwk$name'),
-            ('city', 'TEXT', 'city_pnwk$name'),
-            ('way', 'TEXT', 'report$wayURL')
-            ]
-
-    csvif.write(unique, os.path.join(conf['out_dir'],'name_mismatches.csv'), 
-            col_specs=csv_specs,
-            title=title)
-
-    log('generating mismatched name report. DONE.')
+    # do the name crosscheck (results written to out_dir)
+    m.names_cross_check()
+    #m.names_osm_vs_base()
 
 #doit
-match_berkeley()
+if __name__ == "__main__":
+    match_city()
 
