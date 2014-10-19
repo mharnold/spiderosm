@@ -2,8 +2,8 @@
 Integration Testing
 '''
 
+import config
 import match
-
 
 def tests():
     match.tests()
@@ -11,4 +11,5 @@ def tests():
 
 #doit
 if __name__ == "__main__":
+    config.read_config_files()
     tests()
