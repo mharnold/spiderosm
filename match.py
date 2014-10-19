@@ -8,6 +8,7 @@ import json
 import os
 import pdb
 import shutil
+import tempfile
 
 import geojson
 
@@ -430,21 +431,12 @@ class Match(object):
         # gen fixed osm names report (.csv and .geojson files)
         self.gen_fixed_osm_names_report()
 
-def test_ucb_sw():
+def _test_ucb_sw1(out_dir):
     project = 'ucb_sw'
-
     test_data_dir = config.settings['spiderosm_test_data_dir']
     print 'DEB test_data_dir:',test_data_dir
-
     in_dir = os.path.join(test_data_dir,'input',project)
-    out_dir = os.path.join(test_data_dir,'output',project)
-    #print 'DEB in_dir=%s out_dir=%s' % (in_dir,out_dir)
     
-    # clear any output from previous runs
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-    assert not os.path.exists(out_dir)
-
     m = Match(
             project=project,
             proj4text='+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs',
@@ -472,9 +464,18 @@ def test_ucb_sw():
             'http://www.openstreetmap.org/way/22278224',
             'True']
 
+def test_ucb_sw():
+    tmp_dir = tempfile.gettempdir()
+    out_dir = os.path.join(tmp_dir,'ucb_sw')
+    if os.path.exists(out_dir): shutil.rmtree(out_dir)
+    try:
+        _test_ucb_sw1(out_dir=out_dir)
+    finally:
+        if os.path.exists(out_dir): shutil.rmtree(out_dir)
+
 def tests():
     test_ucb_sw()
-    'match PASS'
+    print 'match PASS'
    
 #doit
 if __name__ == '__main__':

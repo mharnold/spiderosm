@@ -46,14 +46,14 @@ def dict_factory(cursor, row):
     return d
 
 def test():
-    f = tempfile.NamedTemporaryFile(suffix='.sqlite', delete=False)
-    fname = f.name
-    #print 'fname',fname
-    f.close()
-
-    db = Slite(fname, verbose=False)
-    db.test(verbose=False)
-    if os.path.exists(fname): os.remove(fname)
+    with tempfile.NamedTemporaryFile(suffix='.sqlite', delete=False) as temp:
+        fname = temp.name
+    try:
+        #print 'fname',fname
+        db = Slite(fname, verbose=False)
+        db.test(verbose=False)
+    finally:
+        if os.path.exists(fname): os.remove(fname)
     print "spatialite PASS"
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
 import csv
+import os
+import tempfile
 
 import geojson
 
@@ -38,8 +40,7 @@ def write_file(features, f, col_specs=None, title=None):
 
     writer.writerows(rows)
 
-def test():
-    fname = 'csv_test_file.csv'
+def _test1(fname):
     col_specs=[('name',None,'FULLNAME'), ('CATEGORY',None,'CATEGORY')]
 
     features = [
@@ -58,7 +59,7 @@ def test():
 
     {
       "geometry": {
-        "type": "LineString", 
+       "type": "LineString", 
         "coordinates": [ [100,110],[200,210] ]
         }, 
       "type": "Feature", 
@@ -91,6 +92,16 @@ def test():
     assert rows[4] == ['pointy dude', 'LIGHT, RAIL STOP']
 
     print 'csvif PASS'
+
+def test():
+    with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as temp:
+        fname = temp.name
+    try:
+        #print 'fname',fname
+        _test1(fname)
+    finally:
+        if os.path.exists(fname): os.remove(fname)
+    print "spatialite PASS"
 
 #doit
 test()

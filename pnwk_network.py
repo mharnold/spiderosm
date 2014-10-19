@@ -434,10 +434,7 @@ def test_geo_interface():
     assert geo['geometry']['coordinates'][1] == seg.points[1]
     assert geo['properties']['g_pnwk$from_jct_id'] == 10
 
-def test_read_write():
-    tmpDir = tempfile.gettempdir()
-    fname = os.path.join(tmpDir,'spiderosm_pnwk_network_test')
-    fname2 = fname +'2'
+def _test_read_write1(fname,fname2):
     g = test_setup_g()
     seg = g.segs[1]
      
@@ -467,9 +464,15 @@ def test_read_write():
     assert g2.jcts[10].tags['g$ele'] == 1000
     g3.check()
 
-    # cleanup
-    if os.path.exists(fname): os.remove(fname)
-    if os.path.exists(fname2): os.remove(fname2)
+def test_read_write():
+    tmp_dir = tempfile.gettempdir()
+    fname = os.path.join(tmp_dir,'spiderosm_pnwk_network_test')
+    fname2 = fname +'2'
+    try:
+        _test_read_write1(fname=fname,fname2=fname2)
+    finally:
+        if os.path.exists(fname): os.remove(fname)
+        if os.path.exists(fname2): os.remove(fname2)
 
 def test_get_jcts_near_point():
     g = test_setup_g()
