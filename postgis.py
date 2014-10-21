@@ -44,8 +44,7 @@ class PGIS(dbinterface.DatabaseInterface):
         rows = self.select('table_name','information_schema.tables')
         return [ row[0] for row in rows ]
 
-# on module load
-def doit():
+def test():
     # requires preexisting spaitially enabled 'test' database:
     # %createdb test
     pgis = PGIS('test', verbose=False)
@@ -55,6 +54,6 @@ def doit():
 
     print "postgis PASS"
 
-#doit
-doit()
+# on module load
+test()
 

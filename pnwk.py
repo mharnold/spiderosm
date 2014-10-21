@@ -19,4 +19,7 @@ def test():
     foo = PNwk('foo')
     assert foo.name == 'foo'
 
-    print 'pnwk pass'
+    print 'pnwk PASS'
+
+#doit
+test()

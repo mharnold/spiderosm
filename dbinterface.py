@@ -293,3 +293,9 @@ class DatabaseInterface(object):
         assert len(rows) == 1
       
         self.commit()
+
+def test():
+    print 'dbinterface PASS'
+
+#doit
+test()

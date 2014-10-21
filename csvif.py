@@ -91,8 +91,6 @@ def _test1(fname):
     assert rows[1] == ['name','CATEGORY']
     assert rows[4] == ['pointy dude', 'LIGHT, RAIL STOP']
 
-    print 'csvif PASS'
-
 def test():
     with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as temp:
         fname = temp.name
@@ -101,7 +99,7 @@ def test():
         _test1(fname)
     finally:
         if os.path.exists(fname): os.remove(fname)
-    print "spatialite PASS"
+    print "csvif PASS"
 
 #doit
 test()

@@ -3,7 +3,7 @@ http://spiderosm.org
 https://github.com/mharnold/spiderosm
 https://groups.google.com/forum/#!forum/spiderosm
 
-SpiderOSM is a python library for matching path (street) networks, e.g. OpenStreetMaps
+SpiderOSM is a python package for matching path (street) networks, e.g. OpenStreetMaps
 with government centerline data.  SpiderOSM is in early BETA.  Both sys
 admin and programming skills are necessary to install and use the software at
 this time.
@@ -25,29 +25,45 @@ YOU MAKE USE OF.
 EXAMPLES
 ========
 
-match_berkeley.py
------------------
+bin/spider_test.py
+------------------
+Try this first!  It runs fairly extensive tests of all the spiderOSM modules,
+does not require download of any data, and takes less than a minute to run.
+
+bin/spider_berkeley.py
+----------------------
 Downloads Berkeley centerline and latest OSM California extract, clips OSM to
 (buffered) extent of Berkeley centerline data, generates path networks for
 both and matches them.  Also generates mismatched name report (.csv) and
 geojson file.   
+
 By default all output/intermediary files are written as geojson only.
+If postgis is enabled output will also be output to postgis (berkeley
+database.)  If spatialite is enabled (and postgis isn't) an sqlite database
+file will be output too.  (See the CONFIG section below for how-to enable
+postgis and spatialite)
 
-make_portland_osm_pnwk.py
--------------------------
-Downloads latest Oregon OSM extract, clips to Portland area, and generates a
-current osm path network for that area. 
-By default all output/intermediary files are both written as geojson and
-spatialite.
+This takes about 15 minutes to run on my machine, plus a few minutes to
+download the California OSM extract.  If Postgis or Spatialite is enabled it
+will take longer.
 
-match_portland.py
------------------
+bin/spider_portland.py
+----------------------
+NOTE:  default bounding box is approximately Portland proper (not RLIS data
+extent)
 Requires manual download of RLIS streets layer (centerline) data.
-Downloads latest Oregon OSM extract and clips to (buffered) RLIS extent.
+Downloads latest Oregon OSM extract.
 Generates path networks for RLIS (city) data and OSM data, and matches them.
 Also generates mismatched name report (.csv) and geojson file.
-By default, output and intermediary files are both written as geojson, and added to a PostGIS
-database.
+By default all output/intermediary files are written as geojson only.
+If postgis is enabled output will also be output to postgis (portland
+database.)  If spatialite is enabled (and postgis isn't) an sqlite database
+file will be output too.  (See the CONFIG section below for how-to enable
+postgis and spatialite)
+
+This takes about 30 minutes to run on my machine, plus a few minutes to
+download the Oregon OSM extract.  If Postgis or Spatialite is enabled it
+will take longer.
 
 
 DATA FORMATS
@@ -84,8 +100,8 @@ COORDINATE REFERENCE SYSTEMS
 CRS information is not currently determined from input files, and there is no
 automatic translation.  Input files should be in a locally appropriate
 projection.  OSM data is translated from latlon to the local projection by the
-code in osm.py  See the examples (match_berkeley.py and
-make_portland_pnwk.py) for how to setup projection information.
+code in osm.py  See the example toplevels (spider_berkeley.py and
+spider_portland_pnwk.py) for how to setup projection information.
 
 
 Path Networks (.pnwk.geojson):
@@ -94,15 +110,15 @@ The core library does comparisons on "Path Networks"  A path network
 is composed of explicit segments (with associated LineString geo data) and
 explicit jcts (with associated Point geo data.)  A segment has associated From and To jcts.
 Segments are (directly) connected if and only if they share a common junction.
-In order to match networks, they must first be converted to path network
+In order to match two networks, the networks must first be converted to path network
 format.  Path networks for OSM data can be generated with osm.py  Path Networks
 for Berkeley or RLIS centerline data can be generated with centerline.py
 Customization for import of other centerline data is hopefully straight
 forward.
 
 
-INSTALLING AND RUNNING
-======================
+INSTALLATION
+============
 All the instructions below are from a command prompt (Terminal app)
 '%' indicates the shell prompt
 '>>>' indicates the python prompt.
@@ -129,8 +145,9 @@ Install the packages spiderosm depends on with the python installer (pip)
   imposm needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
   impost needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet"
 % pip install pyspatialite
-  if trouble with this, comment out spatialite in make_portland_osm_pnwk.py
- % pip install pyshp
+  if trouble with this - spiderosm will install fine, but you will not be able
+  to output in spaitialite formate.
+% pip install pyshp
   for importing shapefiles
 
 (For windows, instructions for installing pip are at the same link given
@@ -138,14 +155,52 @@ above.)
 Additional packages are probably needed.  These will be 'announced' to you when
 they are found missing at run time.
 
-If you haven't done so already, clone (download) spiderOSM from the github
-repository, and cd to that directory.
+If you haven't done so already, download spiderosm from the github
+repository (https://github.com/mharnold/spiderosm,)
+and copy to your Python site-packages/ directory.
+To find the location of your site-packages directory, try the following
 
-Copy the match_berkeley.py top-level (or possibly make_portland_osm_pnwk.py) and modify to suit your needs.
+% python
+>>> import sys
+>>> sys.path
+
+Alternately add the directory containing spiderosm/ to your PYTHONPATH
+environment variable.
+
+Run spiderosm/bin/spider_test.py to check the installation:
+
+%python spiderosm/bin/spider_test.py
+
+This should take less than a minute to run and the final line of output should
+look something like this:
+
+"Congratulations!  SpiderOSM appears to be properly installed and functioning."
 
 For help etc, please post to the spiderosm forum early and often.  Also please post a
 description of your project.  I'd like to know who my Beta users are!  
 https://groups.google.com/forum/#!forum/spiderosm
+
+
+CONFIG FILES AND ENABLING POSTGIS OR SPATIALITE
+===============================================
+The toplevels in spiderosm/bin read .spiderosm.json (alternately
+config.spiderosm.json) files to give some control
+over configuration.  First .spiderosm.json in the users home directory is
+read (if it exists.)  Second .spiderosm.json in the current directory at
+startup is sourced.  
+
+Here is an example .spiderosm.json file:
+
+{
+  "gis_data_dir": "/Users/me/GIS/data",
+  "postgis_enabled" : true,
+  "spatialite_enabled" : false 
+}
+
+
+USING SPIDEROSM (ONCE INSTALLED)
+================================
+Copy spiderosm/bin/spider_berkeley.py top-level (or spider_portland) and modify to suit your needs.
 
 
 PATH NETWORK SEGMENT ATTRIBUTES

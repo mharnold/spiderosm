@@ -18,8 +18,14 @@ except ImportError:
 # data for spiderosm tests
 settings['spiderosm_test_data_dir'] = os.path.join(settings['spiderosm_dir'],'test_data')
 
+#enabling postgis or spatialite causes results to be written to these database by toplevels 
+# such as examples/match_berkeley.py and examples/match_portland.py.  
+# examples/test_spiderosm also will test enabled database interfaces
+settings['postgis_enabled'] = False
+settings['spatialite_enabled'] = False
+
 # main programs call this explictly after setting 'default' conf values.
-def read_config_files(filenames=None,paths=None):
+def read_config_files(filenames=None,paths=None,quiet=False):
     if not filenames: filenames = ('.spiderosm.json', 'config.spiderosm.json')
     if not paths: paths = ('~', '.')
 
@@ -37,7 +43,7 @@ def test():
     fns = ( '.spiderosm.json', 'config.spiderosm.json' )
     paths = ( '~','.' )
     #read_config_files(fns,paths)
-    print 'settings', settings
+    #print 'settings', settings
     print 'config PASS'
 
 #doit

@@ -33,6 +33,9 @@ def shp2geojson(inFilename,outFilename,clip_rect=None):
             + "\n")
     jsonFile.close()
 
+def test():
+    print 'shp2geojson PASS'
+
 if __name__ == '__main__':
     if len(sys.argv) == 3:
         shp2geojson(sys.argv[1],sys.argv[2])

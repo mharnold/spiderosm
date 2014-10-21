@@ -434,7 +434,7 @@ class Match(object):
 def _test_ucb_sw1(out_dir):
     project = 'ucb_sw'
     test_data_dir = config.settings['spiderosm_test_data_dir']
-    print 'DEB test_data_dir:',test_data_dir
+    #print 'DEB test_data_dir:',test_data_dir
     in_dir = os.path.join(test_data_dir,'input',project)
     
     m = Match(
@@ -473,11 +473,11 @@ def test_ucb_sw():
     finally:
         if os.path.exists(out_dir): shutil.rmtree(out_dir)
 
-def tests():
+def test():
     test_ucb_sw()
     print 'match PASS'
    
 #doit
 if __name__ == '__main__':
     config.read_config_files()
-    tests()
+    test()
