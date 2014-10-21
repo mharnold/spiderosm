@@ -32,13 +32,13 @@ does not require download of any data, and takes less than a minute to run.
 
 bin/spider_berkeley.py
 ----------------------
-Downloads Berkeley centerline and latest OSM California extract, clips OSM to
+Downloads Berkeley centerline and the latest OSM California extract, clips OSM to
 (buffered) extent of Berkeley centerline data, generates path networks for
 both and matches them.  Also generates mismatched name report (.csv) and
 geojson file.   
 
 By default all output/intermediary files are written as geojson only.
-If postgis is enabled output will also be output to postgis (berkeley
+If postgis is enabled output will also be output to postgis ('berkeley'
 database.)  If spatialite is enabled (and postgis isn't) an sqlite database
 file will be output too.  (See the CONFIG section below for how-to enable
 postgis and spatialite)
@@ -49,14 +49,14 @@ will take longer.
 
 bin/spider_portland.py
 ----------------------
-NOTE:  default bounding box is approximately Portland proper (not RLIS data
-extent)
+NOTE:  default bounding box is approximately Portland proper (not the RLIS data
+extent.)
 Requires manual download of RLIS streets layer (centerline) data.
 Downloads latest Oregon OSM extract.
 Generates path networks for RLIS (city) data and OSM data, and matches them.
 Also generates mismatched name report (.csv) and geojson file.
 By default all output/intermediary files are written as geojson only.
-If postgis is enabled output will also be output to postgis (portland
+If postgis is enabled output will also be output to postgis ('portland'
 database.)  If spatialite is enabled (and postgis isn't) an sqlite database
 file will be output too.  (See the CONFIG section below for how-to enable
 postgis and spatialite)
@@ -86,7 +86,7 @@ PostGIS.  QGIS also is more efficient on Spatialite than GeoJson files.
 
 Shapefiles (.shp)
 -----------------
-The ubiquitous shapefile format can be imported via the included
+The ubiquious shapefile format can be imported via the included
 shp2geojson.py  This version does not directly support shapefile output,
 though this will likely be added in the future.  
 
@@ -156,8 +156,8 @@ Additional packages are probably needed.  These will be 'announced' to you when
 they are found missing at run time.
 
 If you haven't done so already, download spiderosm from the github
-repository (https://github.com/mharnold/spiderosm,)
-and copy to your Python site-packages/ directory.
+repository (https://github.com/mharnold/spiderosm)
+and copy it to your Python site-packages directory.
 To find the location of your site-packages directory, try the following
 
 % python
@@ -185,9 +185,9 @@ CONFIG FILES AND ENABLING POSTGIS OR SPATIALITE
 ===============================================
 The toplevels in spiderosm/bin read .spiderosm.json (alternately
 config.spiderosm.json) files to give some control
-over configuration.  First .spiderosm.json in the users home directory is
-read (if it exists.)  Second .spiderosm.json in the current directory at
-startup is sourced.  
+over configuration.  First any .spiderosm.json in the users home directory is
+readi.  Second any .spiderosm.json in the current directory at start up, is
+sourced.
 
 Here is an example .spiderosm.json file:
 
@@ -200,13 +200,13 @@ Here is an example .spiderosm.json file:
 
 USING SPIDEROSM (ONCE INSTALLED)
 ================================
-Copy spiderosm/bin/spider_berkeley.py top-level (or spider_portland) and modify to suit your needs.
+Copy the spiderosm/bin/spider_berkeley.py top-level (or spider_portland) and modify to suit your needs.
 
 
 PATH NETWORK SEGMENT ATTRIBUTES
 ===============================
-In the example (match_berkeley.py) the networks are named 'city' and 'osm' in
-this case network attributes have the following prefixes (namespaces):
+In the examples, e.g., bin/spider_berkeley.py the networks are named 'city'
+and 'osm'.  In this case network attributes have the following prefixes (namespaces):
 
 city$ - attributes of the original city (centerline) data
 osm$  - attributes of the OpenStreetMaps input data
