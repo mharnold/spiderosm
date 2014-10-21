@@ -13,7 +13,7 @@ def _match_city():
     global spiderosm
     project = 'berkeley'
 
-    # allow out_dir and gis_data_dir to be set in config files
+    # allow out_dir and gis_data_dir to be set in config files (.spiderosm.json)
     conf = spiderosm.config.settings
     conf['gis_data_dir'] = 'data'
     conf['out_dir'] = os.path.join('data',project)

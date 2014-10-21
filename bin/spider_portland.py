@@ -14,7 +14,7 @@ def _match_city():
     global spiderosm
     project = 'portland'
 
-    # allow out_dir and gis_data_dir and project_bbox to be set in config files
+    # allow out_dir and gis_data_dir and bbox to be set in config files (.spiderosm.json)
     # DATA DIRS
     conf = spiderosm.config.settings
     conf['gis_data_dir'] = 'data'
