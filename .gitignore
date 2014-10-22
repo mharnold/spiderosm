@@ -1,7 +1,6 @@
 *~
 *.swp
 *.pyc
-*.geojson
 *.csv
 data/
 .DS_Store
