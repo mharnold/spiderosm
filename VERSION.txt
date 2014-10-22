@@ -1,6 +1,7 @@
-v0.0.4
+v0.1.1
 
 SPIDEROSM VERSION HISTORY
+v0.1.1  added back missing test file!
 v0.1.0  now a python package, match_* code refactored to match.py, toplevels
 in bin/, testing cleaned up and spider_test toplevel added, optional database
 modules cleaned up. 
