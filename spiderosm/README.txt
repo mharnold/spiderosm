@@ -1,13 +1,14 @@
 SpiderOSM - README.txt
-http://spiderosm.org
-https://github.com/mharnold/spiderosm
-https://groups.google.com/forum/#!forum/spiderosm
+
+Home Page:  http://spiderosm.org
+Author:  Michael Arnold, mha@spiderosm.org
+Discussion Group:  https://groups.google.com/forum/#!forum/spiderosm
+Source Repository:  https://github.com/mharnold/spiderosm
 
 SpiderOSM is a python package for matching path (street) networks, e.g. OpenStreetMaps
 with government centerline data.  SpiderOSM is in early BETA.  Both sys
 admin and programming skills are necessary to install and use the software at
 this time.
-
 
 LEGAL
 =====
