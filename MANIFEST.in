@@ -1,0 +1,3 @@
+include README.txt
+include spiderosm/test_data/input/*/*
+
