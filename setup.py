@@ -20,7 +20,15 @@ from setuptools import setup
 
 setup(name='spiderosm',
       version='0.2.0',
-      description='Matches street networks (e.g. jurisdictional centerline and OSM) allowing their attributes to be joined.',
+      description='GIS conflation tool for matching street networks.',
+      long_description='GIS conflation tool: matches segments in one path network (e.g. streets and trails) to corresponding segments in another, based on geography and network connectivity.  Useful, among other things, for combining jurisdictional centerline data with Open Street Maps data.',
+      classifiers=[
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Scientific/Engineering :: GIS'
+      ] 
+      keywords='GIS conflation OSM OpenStreetMaps centerline jurisdictional street network matcher'
       url='http://spiderosm.org',
       author='Michael Arnold',
       author_email='mha@spiderosm.com',
@@ -34,4 +42,10 @@ setup(name='spiderosm',
           'imposm',
           'pyshp'
       ],
+      include_package_data=True,
+      scripts=[
+          'bin/spiderosm_test.py',
+          'bin/spiderosm_berkeley.py',
+          'bin/spiderosm_portland.py'
+      ]
       zip_safe=False)
