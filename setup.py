@@ -27,8 +27,8 @@ setup(name='spiderosm',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7',
         'Topic :: Scientific/Engineering :: GIS'
-      ] 
-      keywords='GIS conflation OSM OpenStreetMaps centerline jurisdictional street network matcher'
+      ], 
+      keywords='GIS conflation OSM OpenStreetMaps centerline jurisdictional street network matcher',
       url='http://spiderosm.org',
       author='Michael Arnold',
       author_email='mha@spiderosm.com',
@@ -44,8 +44,8 @@ setup(name='spiderosm',
       ],
       include_package_data=True,
       scripts=[
-          'bin/spiderosm_test.py',
-          'bin/spiderosm_berkeley.py',
-          'bin/spiderosm_portland.py'
-      ]
+          'spiderosm/bin/spiderosm_test.py',
+          'spiderosm/bin/spiderosm_berkeley.py',
+          'spiderosm/bin/spiderosm_portland.py'
+      ],
       zip_safe=False)
