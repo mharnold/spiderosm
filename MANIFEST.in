@@ -1,3 +1,3 @@
-include README.txt
+include *.txt
 include spiderosm/test_data/input/*/*
 
