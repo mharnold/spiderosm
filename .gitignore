@@ -1,6 +1,19 @@
 *~
 *.swp
 *.pyc
-*.csv
-data/
 .DS_Store
+
+# default output dir of spider_berkeley etc.
+data/
+
+# Setuptools distribution folder.
+/dist/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+
+# Setuptools build folder (for 'python setup.py develop'?)
+/build/
+
+
+
