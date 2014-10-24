@@ -4,8 +4,7 @@ Geography / Geometry utilities.
 
 import math
 import cmath
-import numpy
-#import re
+#import numpy
 
 import pyproj
 import shapely

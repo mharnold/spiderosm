@@ -28,7 +28,6 @@ setup(name='spiderosm',
       packages=['spiderosm'],
       install_requires=[
           'pyproj',
-          'numpy',
           'shapely',
           'pylev',
           'geojson',
