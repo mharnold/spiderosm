@@ -1,18 +1,20 @@
-SpiderOSM - README.txt
+Spiderosm - README.txt
 
 Home Page:  http://spiderosm.org
 Author:  Michael Arnold, mha@spiderosm.org
 Discussion Group:  https://groups.google.com/forum/#!forum/spiderosm
 Source Repository:  https://github.com/mharnold/spiderosm
 
-SpiderOSM is a python package for matching path (street) networks, e.g. OpenStreetMaps
-with government centerline data.  SpiderOSM is in early BETA.  Both sys
-admin and programming skills are necessary to install and use the software at
-this time.
+Spiderosm is a python package for matching path (street) networks, e.g. OpenStreetMaps
+with government centerline data.  
+
+Spiderosm is still in BETA.  Python programming skills are needed to use this
+software.
+
 
 LEGAL
 =====
-SpiderOSM is open software, distributed under the MIT license. 
+Spiderosm is open software, distributed under the MIT license. 
 See LICENSE.txt for details
 
 In addition, please note:
@@ -23,15 +25,104 @@ IT IS YOUR RESPONSIBILITY TO KNOW AND ABIDE BY LICENSE RESTIRCTIONS OF ANY DATA
 YOU MAKE USE OF.
 
 
+DOWNLOAD AND INSTALLATION
+=========================
+
+System Requirements
+-------------------
+Current Mac (OS X) and Linux systems should work fine.
+THE WINDOWS OPERATING SYSTEM IS CURRENTLY UNSUPPORTED.  
+This is because the imposm package, used to parse OpenStreetMap data files 
+(.osm.pbf and .osm.xml) does not support windows.
+
+Spiderosm is being developed under Python2.7  slightly older versions of
+Python may also work. Python 3 is not yet supported.
+
+Virtualenv
+----------
+The use of virtualenv is strongly encouraged.  (See
+http://virtualenv.readthedocs.org/en/latest/virtualenv.html )
+This will keep the install of spiderosm from conflicting with other python
+applications on your system.
+
+Python Package Dependencies
+---------------------------
+Spiderosm uses a number of other python packages.  These packages will
+automatically be downloaded during the spiderosm install.  
+
+The imposm package, used by spiderosm, needs protobuf and tokyo-cabinet.  These may not be automatically
+installed.  On a Mac these can be installed with Homebrew (http://brew.sh) as follows:
+
+%brew install protobuf --with-python
+%brew install tokyo-cabinet
+
+If you wish to enable spatialite (see CONFIG FILES below) you will also need
+to install the pyspatialite package:
+
+% pip install pyspatialite --upgrade
+
+Installing with Pip
+-------------------
+The easiest way to download and install is with pip.  From a shell prompt
+(command window):
+
+% pip install spiderosm --upgrade
+
+(The '%' indicates a command prompt, you don't type it. :)
+
+Installing from source distribution
+-----------------------------------
+Download or clone from github (https://github.com/mharnold/spiderosm)
+From a shell prompt:
+
+% cd <your-download-dir>/spiderosm
+% python setup.py install 
+
+Testing the installation
+------------------------
+Open a new command window (so the brand new spiderosm_* commands will be
+found) and enter:
+
+% spiderosm_test
+
+This should take less than a minute to run and the final line of output should
+look something like this:
+
+"Congratulations!  Spiderosm appears to be properly installed and functioning."
+
+Getting Help
+------------
+For help etc, please post to the spiderosm forum early and often.  Also please post a
+description of your project.  I'd like to know who my Beta users are!  
+https://groups.google.com/forum/#!forum/spiderosm
+
+
+CONFIG FILES AND ENABLING POSTGIS OR SPATIALITE
+===============================================
+The toplevels in spiderosm/bin read .spiderosm.json (alternately
+config.spiderosm.json) files to give some control
+over configuration.  First any .spiderosm.json in the users home directory is
+readi.  Second any .spiderosm.json in the current directory at start up, is
+sourced.
+
+Here is an example .spiderosm.json file:
+
+{
+  "gis_data_dir": "/Users/me/GIS/data",
+  "postgis_enabled" : true,
+  "spatialite_enabled" : false 
+}
+
+
 EXAMPLES
 ========
 
-bin/spider_test.py
+bin/spiderosm_test.py
 ------------------
-Try this first!  It runs fairly extensive tests of all the spiderOSM modules,
+Try this first!  It runs fairly extensive tests of all the spiderosm modules,
 does not require download of any data, and takes less than a minute to run.
 
-bin/spider_berkeley.py
+bin/spiderosm_berkeley.py
 ----------------------
 Downloads Berkeley centerline and the latest OSM California extract, clips OSM to
 (buffered) extent of Berkeley centerline data, generates path networks for
@@ -48,7 +139,7 @@ This takes about 15 minutes to run on my machine, plus a few minutes to
 download the California OSM extract.  If Postgis or Spatialite is enabled it
 will take longer.
 
-bin/spider_portland.py
+bin/spiderosm_portland.py
 ----------------------
 NOTE:  default bounding box is approximately Portland proper (not the RLIS data
 extent.)
@@ -65,6 +156,12 @@ postgis and spatialite)
 This takes about 30 minutes to run on my machine, plus a few minutes to
 download the Oregon OSM extract.  If Postgis or Spatialite is enabled it
 will take longer.
+
+
+USING SPIDEROSM (ONCE INSTALLED)
+================================
+Copy the spiderosm/bin/spiderosm_berkeley.py top-level (or
+spiderosm_portland.py) and modify to suit your needs.
 
 
 DATA FORMATS
@@ -117,91 +214,6 @@ for Berkeley or RLIS centerline data can be generated with centerline.py
 Customization for import of other centerline data is hopefully straight
 forward.
 
-
-INSTALLATION
-============
-All the instructions below are from a command prompt (Terminal app)
-'%' indicates the shell prompt
-'>>>' indicates the python prompt.
-
-You will need Python 2.7  Versions 2.5 or 2.6 might work. Version 3.x won't
-work.  To find out what version you are running:
-
-% python --version 
-
-If you are on Windows.  Here is how to update your Python (and also install pip which you will need
-below): 
-
- http://docs.python-guide.org/en/latest/starting/install/win/
-
-Install the packages spiderosm depends on with the python installer (pip)
-% pip install pyproj
-% pip install numpy
-% pip install shapely
-  shapely requires geos library, on Mac: "%brew install geos"  
-% pip install pylev
-% pip install geojson
-% pip install imposm
-  imposm loads psycopg2 (postgis interface!
-  imposm needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
-  impost needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet"
-% pip install pyspatialite
-  if trouble with this - spiderosm will install fine, but you will not be able
-  to output in spaitialite formate.
-% pip install pyshp
-  for importing shapefiles
-
-(For windows, instructions for installing pip are at the same link given
-above.)
-Additional packages are probably needed.  These will be 'announced' to you when
-they are found missing at run time.
-
-If you haven't done so already, download spiderosm from the github
-repository (https://github.com/mharnold/spiderosm)
-and copy it to your Python site-packages directory.
-To find the location of your site-packages directory, try the following
-
-% python
->>> import sys
->>> sys.path
-
-Alternately add the directory containing spiderosm/ to your PYTHONPATH
-environment variable.
-
-Run spiderosm/bin/spider_test.py to check the installation:
-
-%python spiderosm/bin/spider_test.py
-
-This should take less than a minute to run and the final line of output should
-look something like this:
-
-"Congratulations!  SpiderOSM appears to be properly installed and functioning."
-
-For help etc, please post to the spiderosm forum early and often.  Also please post a
-description of your project.  I'd like to know who my Beta users are!  
-https://groups.google.com/forum/#!forum/spiderosm
-
-
-CONFIG FILES AND ENABLING POSTGIS OR SPATIALITE
-===============================================
-The toplevels in spiderosm/bin read .spiderosm.json (alternately
-config.spiderosm.json) files to give some control
-over configuration.  First any .spiderosm.json in the users home directory is
-readi.  Second any .spiderosm.json in the current directory at start up, is
-sourced.
-
-Here is an example .spiderosm.json file:
-
-{
-  "gis_data_dir": "/Users/me/GIS/data",
-  "postgis_enabled" : true,
-  "spatialite_enabled" : false 
-}
-
-
-USING SPIDEROSM (ONCE INSTALLED)
-================================
-Copy the spiderosm/bin/spider_berkeley.py top-level (or spider_portland) and modify to suit your needs.
 
 
 PATH NETWORK SEGMENT ATTRIBUTES

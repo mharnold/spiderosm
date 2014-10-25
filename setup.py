@@ -1,23 +1,5 @@
 from setuptools import setup
 
-'''
-% pip install pyproj
-% pip install numpy
-% pip install shapely
-  shapely requires geos library, on Mac: "%brew install geos"  
-% pip install pylev
-% pip install geojson
-% pip install imposm
-  imposm loads psycopg2 (postgis interface!
-  imposm needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
-  impost needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet"
-% pip install pyspatialite
-  if trouble with this - spiderosm will install fine, but you will not be able
-  to output in spaitialite formate.
-% pip install pyshp
-  for importing shapefiles
-'''
-
 setup(name='spiderosm',
       version='0.2.0',
       description='GIS conflation tool for matching street networks.',
@@ -36,12 +18,21 @@ setup(name='spiderosm',
       packages=['spiderosm'],
       install_requires=[
           'pyproj',
-          'shapely',
+          'shapely', #requires geos library, on Mac: "%brew install geos"  
           'pylev',
-          'geojson',
-          'imposm',
-          'pyshp'
-      ],
+          'geojson >= 1.0.9',
+          'imposm',  
+          # IMPOSM DOES NOT WORK UNDER WINDOWS!
+          # imposm loads psycopg2 (postgis interface!
+          # imposm needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
+          # impost needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet"
+          'imposm',  
+          'pyshp' 
+          ],
+      extras_require={
+          'spatialite' : ['pyspatialite >= 3.0.1']
+          }
+
       include_package_data=True,
       scripts=[
           'spiderosm/bin/spiderosm_test.py',
