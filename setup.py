@@ -1,3 +1,7 @@
+# bootstrap:  install setuptools, if needed
+import ez_setup
+ez_setup.use_setuptools()
+
 from setuptools import setup
 
 setup(name='spiderosm',
@@ -21,9 +25,8 @@ setup(name='spiderosm',
           'shapely', #requires geos library, on Mac: "%brew install geos"  
           'pylev',
           'geojson >= 1.0.9',
-          'imposm',  
           # IMPOSM DOES NOT WORK UNDER WINDOWS!
-          # imposm loads psycopg2 (postgis interface!
+          # imposm loads psycopg2 (postgis interface)
           # imposm needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
           # impost needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet"
           'imposm',  

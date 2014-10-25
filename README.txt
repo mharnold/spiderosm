@@ -45,16 +45,18 @@ http://virtualenv.readthedocs.org/en/latest/virtualenv.html )
 This will keep the install of spiderosm from conflicting with other python
 applications on your system.
 
-Python Package Dependencies
----------------------------
+Dependencies
+------------
 Spiderosm uses a number of other python packages.  These packages will
 automatically be downloaded during the spiderosm install.  
 
-The imposm package, used by spiderosm, needs protobuf and tokyo-cabinet.  These may not be automatically
+The imposm package, used by spiderosm, needs protobuf and tokyo-cabinet.  The
+shapely package requires geos. These may not be automatically
 installed.  On a Mac these can be installed with Homebrew (http://brew.sh) as follows:
 
 %brew install protobuf --with-python
 %brew install tokyo-cabinet
+%brew install geos 
 
 If you wish to enable spatialite (see CONFIG FILES below) you will also need
 to install the pyspatialite package:
