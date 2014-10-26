@@ -1,3 +1,4 @@
 include *.txt
+include ez_setup.py
 include spiderosm/test_data/input/*/*
 
