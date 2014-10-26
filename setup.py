@@ -34,8 +34,7 @@ setup(name='spiderosm',
           ],
       extras_require={
           'spatialite' : ['pyspatialite >= 3.0.1']
-          }
-
+          },
       include_package_data=True,
       scripts=[
           'spiderosm/bin/spiderosm_test.py',
