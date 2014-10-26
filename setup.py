@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='spiderosm',
-      version='0.2.1',
+      version='0.2.2',
       description='GIS conflation tool for matching street networks.',
       long_description='GIS conflation tool: matches segments in one path network (e.g. streets and trails) to corresponding segments in another, based on geography and network connectivity.  Useful, among other things, for combining jurisdictional centerline data with Open Street Maps data.',
       classifiers=[
