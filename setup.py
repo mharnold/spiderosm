@@ -1,11 +1,7 @@
-# bootstrap:  install setuptools, if needed
-import ez_setup
-ez_setup.use_setuptools()
-
 from setuptools import setup
 
 setup(name='spiderosm',
-      version='0.2.0',
+      version='0.2.1',
       description='GIS conflation tool for matching street networks.',
       long_description='GIS conflation tool: matches segments in one path network (e.g. streets and trails) to corresponding segments in another, based on geography and network connectivity.  Useful, among other things, for combining jurisdictional centerline data with Open Street Maps data.',
       classifiers=[
@@ -25,11 +21,10 @@ setup(name='spiderosm',
           'shapely', #requires geos library, on Mac: "%brew install geos"  
           'pylev',
           'geojson >= 1.0.9',
-          # IMPOSM DOES NOT WORK UNDER WINDOWS!
-          # imposm loads psycopg2 (postgis interface)
-          # imposm needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
-          # impost needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet"
-          'imposm',  
+          # imposm.parser DOES NOT WORK UNDER WINDOWS!
+          # imposm.parser needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
+          # imposm.parser needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet" ?
+          'imposm.parser',  
           'pyshp' 
           ],
       extras_require={

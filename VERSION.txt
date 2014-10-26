@@ -1,6 +1,9 @@
-v0.1.1
+v0.2.1
 
 SPIDEROSM VERSION HISTORY
+v0.2.1  changed 'imposm' requirment to 'imposm.parser' so psycopg2 not needed!
+v0.2.0  installs with setuptools, registered with PyPI  '%pip install
+spiderosm' now works.
 v0.1.1  added back missing test file!
 v0.1.0  now a python package, match_* code refactored to match.py, toplevels
 in bin/, testing cleaned up and spider_test toplevel added, optional database

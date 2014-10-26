@@ -38,30 +38,21 @@ This is because the imposm package, used to parse OpenStreetMap data files
 Spiderosm is being developed under Python2.7  slightly older versions of
 Python may also work. Python 3 is not yet supported.
 
+Dependencies
+------------
+Spiderosm uses the python package imposm.parser to parser OpenStreetMap files
+(.osm.xml and .osm.pbf)   imposm.parser requires protobuf and tokyocabinet.
+On a Mac these can be installed with Homebrew (http://brew.sh) as follows:
+
+%brew install protobuf --with-python
+%brew install tokyo-cabinet
+
 Virtualenv
 ----------
 The use of virtualenv is strongly encouraged.  (See
 http://virtualenv.readthedocs.org/en/latest/virtualenv.html )
 This will keep the install of spiderosm from conflicting with other python
 applications on your system.
-
-Dependencies
-------------
-Spiderosm uses a number of other python packages.  These packages will
-automatically be downloaded during the spiderosm install.  
-
-The imposm package, used by spiderosm, needs protobuf and tokyo-cabinet.  The
-shapely package requires geos. These may not be automatically
-installed.  On a Mac these can be installed with Homebrew (http://brew.sh) as follows:
-
-%brew install protobuf --with-python
-%brew install tokyo-cabinet
-%brew install geos 
-
-If you wish to enable spatialite (see CONFIG FILES below) you will also need
-to install the pyspatialite package:
-
-% pip install pyspatialite --upgrade
 
 Installing with Pip
 -------------------
@@ -85,7 +76,7 @@ Testing the installation
 Open a new command window (so the brand new spiderosm_* commands will be
 found) and enter:
 
-% spiderosm_test
+% spiderosm_test.py
 
 This should take less than a minute to run and the final line of output should
 look something like this:
@@ -115,6 +106,12 @@ Here is an example .spiderosm.json file:
   "spatialite_enabled" : false 
 }
 
+If postgis_enabled is set you will need the python package psycopg2:
+% pip install --upgrade psycopg2
+
+If spatialite_enabled is set you will need the python pakcage pyspatialite:
+% pip install --upgrade pyspatialite
+
 
 EXAMPLES
 ========
@@ -134,7 +131,7 @@ geojson file.
 By default all output/intermediary files are written as geojson only.
 If postgis is enabled output will also be output to postgis ('berkeley'
 database.)  If spatialite is enabled (and postgis isn't) an sqlite database
-file will be output too.  (See the CONFIG section below for how-to enable
+file will be output too.  (See the CONFIG section above for how-to enable
 postgis and spatialite)
 
 This takes about 15 minutes to run on my machine, plus a few minutes to
@@ -152,7 +149,7 @@ Also generates mismatched name report (.csv) and geojson file.
 By default all output/intermediary files are written as geojson only.
 If postgis is enabled output will also be output to postgis ('portland'
 database.)  If spatialite is enabled (and postgis isn't) an sqlite database
-file will be output too.  (See the CONFIG section below for how-to enable
+file will be output too.  (See the CONFIG section above for how-to enable
 postgis and spatialite)
 
 This takes about 30 minutes to run on my machine, plus a few minutes to
