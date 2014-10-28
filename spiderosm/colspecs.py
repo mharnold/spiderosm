@@ -1,4 +1,5 @@
 #TODO clean this up with ColSpecs class
+import numbers
 
 import geojson
 
@@ -7,8 +8,8 @@ import geo
 # auto gen colspecs from geo features
 def gen(geo, geometry_type=None):
     geo_type_table = {'LineString':'LINESTRING', 'Point':'POINT'}
-    type_name = { int:'INT', float:'FLOAT', basestring:'TEXT'}
-    type_rank = { int:1, float:2, basestring:3 }
+    type_name = { numbers.Integral:'INT', numbers.Real:'FLOAT', basestring:'TEXT'}
+    type_rank = { numbers.Integral:1, numbers.Real:2, basestring:3 }
 
     def make_bigint_specs(specs, features, geometry_type):
         for (prop,type_name) in specs.items():
@@ -30,9 +31,14 @@ def gen(geo, geometry_type=None):
         if feature['geometry']['type'] != geometry_type: continue
         for (prop,value) in feature['properties'].items():
             if value==None: continue
-            t = type(value)
-            if isinstance(value,basestring): t = basestring # includes unicode strings.
-            if t not in type_rank: t = basestring # anything weird goes to TEXT.
+            if isinstance(value,numbers.Integral):      # includes int and long
+                t = numbers.Integral
+            elif isinstance(value,numbers.Real): 
+                t = numbers.Real
+            elif isinstance(value,basestring):  # includes unicode
+                t = basestring
+            else:
+                t = basestring # anything weird goes to TEXT.
             if specs_rank.get(prop,0) >= type_rank[t]: continue        
             specs[prop] = type_name[t]
             specs_rank[prop] = type_rank[t]
@@ -78,7 +84,7 @@ def _make_geo():
         geojson.Feature(geometry=geometry, id=1, properties={'name':'john','addr':1212, 'gpa':3.5}),
         geojson.Feature(geometry=geometry, id=2, properties={'fish':'salmon', 'addr':'sea', 'gpa':3, 'foo':None}),
         geojson.Feature(geometry=ls, id=10, properties={'other':10}),
-        geojson.Feature(geometry=geometry, id=3, properties={'num':2**40}),
+        geojson.Feature(geometry=geometry, id=3, properties={'num':2**80}),
         geojson.Feature(geometry=geometry, id=4, properties={'Num':2}),
         geojson.Feature(geometry=geometry, id=5, properties={'NUM':'many'})
         ]
@@ -89,7 +95,6 @@ def test():
     geo = _make_geo()
     col_specs = gen(geo)
     col_specs = fix(col_specs)
-    #print 'col_specs',col_specs
     assert col_specs == [('NUM', 'TEXT', 'NUM'), ('Num$1', 'INT', 'Num'), 
             ('addr', 'TEXT', 'addr'), ('fish', 'TEXT', 'fish'), ('gpa', 'FLOAT', 'gpa'), 
             ('name', 'TEXT', 'name'), ('num$2', 'BIGINT', 'num'), ('geometry', 'POINT', 'geometry')]
