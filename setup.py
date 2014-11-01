@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='spiderosm',
-      version='0.2.3',
+      version='0.3.0',
       description='GIS conflation tool for matching street networks.',
       long_description='GIS conflation tool: matches segments in one path network (e.g. streets and trails) to corresponding segments in another, based on geography and network connectivity.  Useful, among other things, for combining jurisdictional centerline data with Open Street Maps data.',
       classifiers=[
@@ -21,14 +21,16 @@ setup(name='spiderosm',
           'shapely', #requires geos library, on Mac: "%brew install geos"  
           'pylev',
           'geojson >= 1.0.9',
-          # imposm.parser DOES NOT WORK UNDER WINDOWS!
-          # imposm.parser needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
-          # imposm.parser needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet" ?
-          'imposm.parser',  
           'pyshp' 
           ],
       extras_require={
-          'spatialite' : ['pyspatialite >= 3.0.1']
+          'spatialite' : ['pyspatialite >= 3.0.1'],
+          'postgis' : 'psycopg2
+
+          #imposm.parser is now optional:
+          #  DOES NOT WORK UNDER WINDOWS!
+          #  needs protobuf / protoc, on Mac: "%brew install protobuf --with-python"
+          #  needs tokyo-cabinet, on Mac: "%brew install tokyo-cabinet" ?
           },
       include_package_data=True,
       scripts=[

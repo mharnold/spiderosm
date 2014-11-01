@@ -29,7 +29,7 @@ class Match(object):
             units=None,
             bbox=None,
             out_dir=None,
-            db = None):
+            db=None):
 
         # defaults 
         if not out_dir: out_dir = 'data'
@@ -173,7 +173,9 @@ class Match(object):
         if not in_fname: return
 
         # osm -> geojson
-        osm_data = osm.OSMData(in_fname, clip_rect=self.bbox, target_proj=self.proj4text)
+        osm_data = osm.OSMData(in_fname, 
+                clip_rect=self.bbox, 
+                target_proj=self.proj4text)
         osm_data.write_geojson(out_fname) # .osm.geojson
         if self.db: 
             self.db.write_geo(osm_data, name+'_ways',geometry_type='LineString')

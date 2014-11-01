@@ -6,13 +6,16 @@ import math
 import cmath
 
 import pyproj
-import imposm.parser  # parses OpenStreetMaps xml and pbf file formats.
 import geojson
 
 import geo
+import osmparser
 import pnwk
 
 osm_geojson_file_extension = '.osm.geojson'
+
+# imposm.parser is used when available, unless this is set.
+disable_imposm_parser = False
 
 class Way(object):
     def __init__(self, tags, node_ids):
@@ -36,17 +39,17 @@ class OSMData(object):
 	self.nodes[osmId] = Node(coords, tags=tags)
         #if tags: print 'DEB _parse_node, osmId:',osmId,'tags:',tags
 
-    # callback for coords (called for ALL nodes, both those with and without tags.)
+    # imposm.parser callback for coords (called for ALL nodes, both those with and without tags.)
     def _parse_coords(self, coords_in):
         for osmId, lon, lat in coords_in:
 	    if not (osmId in self.nodes): self._parse_node(osmId, (lon,lat))
 
-    # callback for nodes (with tags only)
+    # callback for nodes (with tags only, in case of imposm.parser)
     def _parse_nodes(self, nodes_in):
 	for osmId,tags,coords in nodes_in:
             self._parse_node(osmId, coords, tags=tags)
-       
-    # callback for ways
+
+    # callback for ways 
     def _parse_ways(self, ways_in):
         for osmid, tags, refs in ways_in:
 
@@ -73,10 +76,24 @@ class OSMData(object):
     # processing in two passes to avoid thrashing when clipping an area from huge files.
     def _parse_input_file(self, file_name):
 
+        # imposm.parser available?
+        if disable_imposm_parser:
+            use_imposm_parser = False
+        else:
+            try: 
+                import imposm.parser
+                use_imposm_parser = True
+            except ImportError:
+                use_imposm_parser = False
+               
         # first pass: nodes 
-	p = imposm.parser.OSMParser(
-	    coords_callback=self._parse_coords,
-	    nodes_callback=self._parse_nodes)
+        if use_imposm_parser:
+	    p = imposm.parser.OSMParser(
+                    coords_callback=self._parse_coords,
+                    nodes_callback=self._parse_nodes)
+        else:
+            p = osmparser.OSMParser(
+                    all_nodes_callback=self._parse_nodes)
 				
 	print 'Reading nodes from osm file:', file_name
 	if os.path.splitext(file_name)[1] == '.xml':
@@ -85,8 +102,12 @@ class OSMData(object):
 	    p.parse(file_name)
 
         # second pass: ways
-	p = imposm.parser.OSMParser(
-	    ways_callback=self._parse_ways)
+        if use_imposm_parser:
+	    p = imposm.parser.OSMParser(
+	        ways_callback=self._parse_ways)
+        else:
+	    p = osmparser.OSMParser(
+	        ways_callback=self._parse_ways)
 				
 	print 'Reading ways from osm file:', file_name
 	if os.path.splitext(file_name)[1] == '.xml':
@@ -141,7 +162,7 @@ class OSMData(object):
 
         self.proj=None
         if target_proj: self.proj = geo.Projection(target_proj)
-       
+
 	#read in file
 	self._parse_input_file(file_name)
 
@@ -193,7 +214,7 @@ class OSMData(object):
             geojson.dump(self.__geo_interface__,f,indent=2)
         
     # segments split at junctions
-    # all attributes (keys) copied unless props/node_props specified.
+    # all attributes (keys) copied unless seg_props/jct_props specified.
     def create_path_network(self, name=None, seg_props=None, jct_props=None):
         if not name: name='osm'
         nwk = pnwk.PNwk(name=name)

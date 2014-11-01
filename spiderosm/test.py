@@ -18,6 +18,7 @@ core_modules = (
         'match',
         'misc',
         'osm',
+        'osmparser',
         'pnwk',
         'pnwk_match',
         'pnwk_matchjcts',
