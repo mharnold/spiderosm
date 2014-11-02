@@ -88,6 +88,7 @@ class OSMData(object):
 	    p.parse(file_name)
 
         # second pass: ways
+        print 'Reading ways from osm file:', file_name
         if xml_format:
             p = osmparser.OSMParser(
 	        ways_callback=self._parse_ways)

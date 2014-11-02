@@ -50,7 +50,7 @@ def _match_city():
             db=db,
             out_dir=out_dir)
 
-    #CITY DATA
+    #CITY DATA (jurisdictional centerline data)
     # source: http://www.ci.berkeley.ca.us/datacatalog/
     m.city_url = 'http://www.ci.berkeley.ca.us/uploadedFiles/IT/GIS/streets.zip'
     m.city_zip = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.zip')
@@ -59,11 +59,11 @@ def _match_city():
     m.centerline_to_pnwk = spiderosm.centerline.berkeley_pnwk
     m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
-    #OSM DATA
+    #OSM DATA (downloaded via overpass API by default)
     #geofabrik extracts updated daily
     #m.osm_url = 'http://download.geofabrik.de/north-america/us/california-latest.osm.pbf'
     #m.osm = os.path.join(gis_data_dir,'osm','geofabrik.de','california-latest.osm.pbf')
-    m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
+    #m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
 
     #OSM BASE (before name fixes)
     #m.base = os.path.join(gis_data_dir,'osm','geofabrik.de','california-140401.osm.pbf')

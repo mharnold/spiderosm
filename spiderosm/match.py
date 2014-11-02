@@ -31,7 +31,7 @@ class Match(object):
             out_dir=None,
             db=None):
 
-        # defaults 
+        # argument defaults 
         if not out_dir: out_dir = 'data'
         if not units: units = 'meters'
 
@@ -51,19 +51,21 @@ class Match(object):
         self.city_zip = None
         self.city_shp = None
         self.city_geojson = None
-        self.city_network = None # .pnwk.geojson
+        self.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
         # osm paths
         self.osm_url = None
         self.osm = None
-        self.osm_network = None
+        self.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
 
         # base paths (osm base version)
         self.base_url = None
         self.base = None
         self.base_network = None
 
+        # logging
         self.log_current_task = None       
+
         # setup
         self.projection = geo.Projection(proj4text)
         if not os.path.exists(out_dir): os.makedirs(out_dir)

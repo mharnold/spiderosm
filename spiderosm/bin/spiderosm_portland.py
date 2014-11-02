@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 '''
 Match Portland Oregon RLIS street centerline to OSM
-
 '''
 import os
 
@@ -69,13 +68,13 @@ def _match_city():
     m.city_shp= os.path.join(gis_data_dir,'centerline','rlis','streets','streets.shp')
     m.city_geojson = os.path.join(out_dir,'streets.geojson')
     m.centerline_to_pnwk = spiderosm.centerline.rlis_pnwk
-    m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
+    #m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
-    #OSM DATA
+    #OSM DATA (downloaded via overpass API by default)
     #geofabrik extracts updated daily
     #m.osm_url = 'http://download.geofabrik.de/north-america/us/oregon-latest.osm.pbf'
     #m.osm = os.path.join(gis_data_dir, 'osm', 'geofabrik.de', 'oregon-latest.osm.pbf')
-    m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
+    #m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
 
     #OSM BASE (before name fixes)
     #m.base_url = 'http://download.geofabrik.de/north-america/us/oregon-140901.osm.pbf'

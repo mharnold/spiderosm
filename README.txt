@@ -30,22 +30,8 @@ DOWNLOAD AND INSTALLATION
 
 System Requirements
 -------------------
-Current Mac (OS X) and Linux systems should work fine.
-THE WINDOWS OPERATING SYSTEM IS CURRENTLY UNSUPPORTED.  
-This is because the imposm package, used to parse OpenStreetMap data files 
-(.osm.pbf and .osm.xml) does not support windows.
-
 Spiderosm is being developed under Python2.7  slightly older versions of
 Python may also work. Python 3 is not yet supported.
-
-Dependencies
-------------
-Spiderosm uses the python package imposm.parser to parser OpenStreetMap files
-(.osm.xml and .osm.pbf)   imposm.parser requires protobuf and tokyocabinet.
-On a Mac these can be installed with Homebrew (http://brew.sh) as follows:
-
-%brew install protobuf --with-python
-%brew install tokyo-cabinet
 
 Virtualenv
 ----------
@@ -90,12 +76,15 @@ description of your project.  I'd like to know who my Beta users are!
 https://groups.google.com/forum/#!forum/spiderosm
 
 
-CONFIG FILES AND ENABLING POSTGIS OR SPATIALITE
-===============================================
+CONFIG FILES AND OPTIONAL COMPONENTS
+====================================
+
+Config Files
+------------
 The toplevels in spiderosm/bin read .spiderosm.json (alternately
 config.spiderosm.json) files to give some control
 over configuration.  First any .spiderosm.json in the users home directory is
-readi.  Second any .spiderosm.json in the current directory at start up, is
+read.  Second any .spiderosm.json in the current directory at start up, is
 sourced.
 
 Here is an example .spiderosm.json file:
@@ -106,11 +95,35 @@ Here is an example .spiderosm.json file:
   "spatialite_enabled" : false 
 }
 
-If postgis_enabled is set you will need the python package psycopg2:
+PostGIS
+-------
+If postgis_enabled is set (see 'Config Files' above) you will need the python package psycopg2:
+
 % pip install --upgrade psycopg2
 
-If spatialite_enabled is set you will need the python pakcage pyspatialite:
+Spatialite
+----------
+If spatialite_enabled (see 'Config Files' above) is set you will need the python pakcage pyspatialite:
+
 % pip install --upgrade pyspatialite
+
+Imposm.parser and .osm.pbf format
+---------------------------------
+To parse osm binary files (.osm.pbf) you will need to install imposm.parser.
+Note, that this is normally not necessary as imposm.parser is not needed for
+parsing .osm.xml files, and spiderosm's 'default' method of obtaining OSM data
+is via the overpass API (see bin/spiderosm_berkeley.py for example.)
+
+Imposm.parser apparently is UNSUPPORTED ON THE WINDOWS.  It requires protobuf and tokyocabinet.
+On a Mac these can be installed with Homebrew (http://brew.sh) as follows:
+
+%brew install protobuf --with-python
+%brew install tokyo-cabinet
+
+Once these dependencies have been installed the imposm.parser python package
+can be installed with pip:
+
+%pip install --upgrade imposm.parser
 
 
 EXAMPLES
@@ -123,10 +136,9 @@ does not require download of any data, and takes less than a minute to run.
 
 bin/spiderosm_berkeley.py
 ----------------------
-Downloads Berkeley centerline and the latest OSM California extract, clips OSM to
-(buffered) extent of Berkeley centerline data, generates path networks for
-both and matches them.  Also generates mismatched name report (.csv) and
-geojson file.   
+Downloads Berkeley centerline and OSM data for the same area (via the overpass
+API), generates path networks for both and matches them.  Also generates
+mismatched name report (.csv) and geojson file.   
 
 By default all output/intermediary files are written as geojson only.
 If postgis is enabled output will also be output to postgis ('berkeley'
@@ -134,16 +146,15 @@ database.)  If spatialite is enabled (and postgis isn't) an sqlite database
 file will be output too.  (See the CONFIG section above for how-to enable
 postgis and spatialite)
 
-This takes about 15 minutes to run on my machine, plus a few minutes to
-download the California OSM extract.  If Postgis or Spatialite is enabled it
-will take longer.
+This runs in under five minutes on my machine (including download time.)
+If Postgis or Spatialite is enabled it will take longer.
 
 bin/spiderosm_portland.py
 ----------------------
 NOTE:  default bounding box is approximately Portland proper (not the RLIS data
 extent.)
 Requires manual download of RLIS streets layer (centerline) data.
-Downloads latest Oregon OSM extract.
+Downloads OSM data via overpass API.
 Generates path networks for RLIS (city) data and OSM data, and matches them.
 Also generates mismatched name report (.csv) and geojson file.
 By default all output/intermediary files are written as geojson only.
@@ -152,9 +163,8 @@ database.)  If spatialite is enabled (and postgis isn't) an sqlite database
 file will be output too.  (See the CONFIG section above for how-to enable
 postgis and spatialite)
 
-This takes about 30 minutes to run on my machine, plus a few minutes to
-download the Oregon OSM extract.  If Postgis or Spatialite is enabled it
-will take longer.
+This takes about 22 minutes on my machine nearly half of that time is for the rather large 
+OSM download.  If Postgis or Spatialite is enabled runtime will go up.
 
 
 USING SPIDEROSM (ONCE INSTALLED)
@@ -187,9 +197,12 @@ The ubiquious shapefile format can be imported via the included
 shp2geojson.py  This version does not directly support shapefile output,
 though this will likely be added in the future.  
 
-OSM (.osm.xml and .osm.pdf)
+OSM (overpass API, .osm.xml, and .osm.pbf)
 ---------------------------
-Import of OSM data is supported via the imposm parser (osm.py)
+Import of OSM data is supported via the overpass API.
+In addition .osm.xml files can be parsed by spiderosm.
+OSM binary files (.osm.pbf) parsing is currently supported via the optional python package
+imposm.parser (not available for windows.)
 
 
 COORDINATE REFERENCE SYSTEMS
