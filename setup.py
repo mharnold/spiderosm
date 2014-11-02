@@ -25,7 +25,7 @@ setup(name='spiderosm',
           ],
       extras_require={
           'spatialite' : ['pyspatialite >= 3.0.1'],
-          'postgis' : 'psycopg2
+          'postgis' : 'psycopg2'
 
           #imposm.parser is now optional:
           #  DOES NOT WORK UNDER WINDOWS!
