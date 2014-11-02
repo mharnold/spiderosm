@@ -73,8 +73,8 @@ def _match_city():
 
     #OSM DATA
     #geofabrik extracts updated daily
-    m.osm_url = 'http://download.geofabrik.de/north-america/us/oregon-latest.osm.pbf'
-    m.osm = os.path.join(gis_data_dir, 'osm', 'geofabrik.de', 'oregon-latest.osm.pbf')
+    #m.osm_url = 'http://download.geofabrik.de/north-america/us/oregon-latest.osm.pbf'
+    #m.osm = os.path.join(gis_data_dir, 'osm', 'geofabrik.de', 'oregon-latest.osm.pbf')
     m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
 
     #OSM BASE (before name fixes)

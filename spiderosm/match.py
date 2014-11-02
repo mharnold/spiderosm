@@ -170,7 +170,8 @@ class Match(object):
 
 
     def build_osm_pnwk(self, name, in_fname, out_fname):
-        if not in_fname: return
+        #if in_fname None, osm.OSMData() imports data via overpass api
+        #if not in_fname: return
 
         # osm -> geojson
         osm_data = osm.OSMData(in_fname, 

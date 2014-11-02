@@ -1,14 +1,12 @@
 import os
-import time
 import shutil
 import urllib
-import math
-import cmath
 
 import pyproj
 import geojson
 
 import geo
+import geofeatures
 import osmparser
 import pnwk
 
@@ -75,7 +73,6 @@ class OSMData(object):
     # read in an OSM data file
     # processing in two passes to avoid thrashing when clipping an area from huge files.
     def _parse_input_file(self, file_name):
-
         # imposm.parser available?
         if disable_imposm_parser:
             use_imposm_parser = False
@@ -95,7 +92,7 @@ class OSMData(object):
             p = osmparser.OSMParser(
                     all_nodes_callback=self._parse_nodes)
 				
-	print 'Reading nodes from osm file:', file_name
+        print 'Reading nodes from osm file:', file_name
 	if os.path.splitext(file_name)[1] == '.xml':
 	    p.parse_xml_file(file_name)
 	else:
@@ -156,12 +153,30 @@ class OSMData(object):
 	        del self.nodes[node_id]
 		#print 'del node:',node_id
 
-    # initialize from OSM input file
-    def __init__(self, file_name, clip_rect=None, target_proj=None):
+    # initialize from OSM input file, if given, else via overpass API
+    def __init__(self, file_name=None, clip_rect=None, target_proj=None,quiet=False):
+        # if no file_name given we need to know what area to get via overpass 
+        assert file_name or clip_rect
         self.clip_rect = clip_rect
+
+        self.quiet = quiet
 
         self.proj=None
         if target_proj: self.proj = geo.Projection(target_proj)
+
+        # if no filename import OSM area with overpass
+        if not file_name:
+            if self.proj:
+                geo_bbox = self.proj.project_box(clip_rect, rev=True)
+            else:
+                geo_bbox = clip_rect
+            self.clip_rect = None # no need to double clip
+            
+            overpass_url='http://overpass-api.de/api/map?bbox=%f,%f,%f,%f' % geo_bbox
+            file_name ='/Users/mha/develop/try/overpass.osm.xml'
+            print 'DEB overpass_url:', overpass_url
+            print 'DEB file_name:', file_name
+            urllib.urlretrieve(overpass_url,file_name)
 
 	#read in file
 	self._parse_input_file(file_name)
@@ -277,9 +292,22 @@ class OSMData(object):
         return nwk
 
 def test():
-    # TODO: more rigorous testing.
+    # tiny OSM area in Berkeley Marina
+    clip_rect=(-122.31851,37.86517,-122.31635,37.86687)
+    osm_data = OSMData(clip_rect=clip_rect)
+
+    def feature_func(feature,props):
+        if props.get('name') != 'Seawall Drive': return False
+        return True
+
+    found = geofeatures.filter_features(osm_data,
+            feature_func=feature_func,
+            geom_type='LineString')
+    assert len(found) > 0
+
     print "osm PASS"
 
 #doit
-test()
+if __name__ == '__main__':
+    test()
 
