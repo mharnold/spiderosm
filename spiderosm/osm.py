@@ -1,5 +1,5 @@
 import os
-import shutil
+import StringIO
 import urllib
 
 import pyproj
@@ -11,9 +11,6 @@ import osmparser
 import pnwk
 
 osm_geojson_file_extension = '.osm.geojson'
-
-# imposm.parser is used when available, unless this is set.
-disable_imposm_parser = False
 
 class Way(object):
     def __init__(self, tags, node_ids):
@@ -72,48 +69,51 @@ class OSMData(object):
  
     # read in an OSM data file
     # processing in two passes to avoid thrashing when clipping an area from huge files.
-    def _parse_input_file(self, file_name):
-        # imposm.parser available?
-        if disable_imposm_parser:
-            use_imposm_parser = False
-        else:
-            try: 
-                import imposm.parser
-                use_imposm_parser = True
-            except ImportError:
-                use_imposm_parser = False
-               
+    def _parse_input_file(self, file_name, xml_format=None):
+        if xml_format == None:
+	    xml_format = (os.path.splitext(file_name)[1] == '.xml')
+				
         # first pass: nodes 
-        if use_imposm_parser:
+        print 'Reading nodes from osm file:', file_name
+        if xml_format:
+            p = osmparser.OSMParser(
+                    all_nodes_callback=self._parse_nodes)
+	    p.parse_xml_file(file_name)
+	else:
+            # osmparser.py does not currently handle .osm.pbf, attempt to use imposm.parser
+            import imposm.parser
 	    p = imposm.parser.OSMParser(
                     coords_callback=self._parse_coords,
                     nodes_callback=self._parse_nodes)
-        else:
-            p = osmparser.OSMParser(
-                    all_nodes_callback=self._parse_nodes)
-				
-        print 'Reading nodes from osm file:', file_name
-	if os.path.splitext(file_name)[1] == '.xml':
-	    p.parse_xml_file(file_name)
-	else:
 	    p.parse(file_name)
 
         # second pass: ways
-        if use_imposm_parser:
+        if xml_format:
+            p = osmparser.OSMParser(
+	        ways_callback=self._parse_ways)
+	    p.parse_xml_file(file_name)
+        else:
 	    p = imposm.parser.OSMParser(
 	        ways_callback=self._parse_ways)
-        else:
-	    p = osmparser.OSMParser(
-	        ways_callback=self._parse_ways)
+            p.parse(file_name)
 				
-	print 'Reading ways from osm file:', file_name
-	if os.path.splitext(file_name)[1] == '.xml':
-	    p.parse_xml_file(file_name)
-	else:
-	    p.parse(file_name)
-	    
 	print 'len(ways):', len(self.ways)
 	print 'len(nodes):', len(self.nodes)
+
+    # download OSM data via overpass API and parse it.
+    def _import_and_parse_overpass_data(self):
+        # need bbox in geo: (lon,lat)
+        if self.proj:
+            geo_bbox = self.proj.project_box(self.clip_rect, rev=True)
+        else:
+            geo_bbox = self.clip_rect
+        self.clip_rect = None # no need to double clip
+        
+        overpass_url='http://overpass-api.de/api/map?bbox=%f,%f,%f,%f' % geo_bbox
+        (temp_file_name, headers) = urllib.urlretrieve(overpass_url)
+
+        self._parse_input_file(temp_file_name, xml_format=True)
+        os.remove(temp_file_name)
 
     # remove stutters (repeated node refs) from ways
     def _remove_stutters(self):
@@ -154,33 +154,19 @@ class OSMData(object):
 		#print 'del node:',node_id
 
     # initialize from OSM input file, if given, else via overpass API
-    def __init__(self, file_name=None, clip_rect=None, target_proj=None,quiet=False):
+    def __init__(self, file_name=None, clip_rect=None, target_proj=None):
         # if no file_name given we need to know what area to get via overpass 
         assert file_name or clip_rect
         self.clip_rect = clip_rect
 
-        self.quiet = quiet
-
         self.proj=None
         if target_proj: self.proj = geo.Projection(target_proj)
 
-        # if no filename import OSM area with overpass
-        if not file_name:
-            if self.proj:
-                geo_bbox = self.proj.project_box(clip_rect, rev=True)
-            else:
-                geo_bbox = clip_rect
-            self.clip_rect = None # no need to double clip
+        if file_name:
+	    self._parse_input_file(file_name)
+        else:
+            self._import_and_parse_overpass_data()
             
-            overpass_url='http://overpass-api.de/api/map?bbox=%f,%f,%f,%f' % geo_bbox
-            file_name ='/Users/mha/develop/try/overpass.osm.xml'
-            print 'DEB overpass_url:', overpass_url
-            print 'DEB file_name:', file_name
-            urllib.urlretrieve(overpass_url,file_name)
-
-	#read in file
-	self._parse_input_file(file_name)
-
         #remove stutters from ways (repeated node refs)
         self._remove_stutters()
 

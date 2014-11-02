@@ -9,12 +9,12 @@ class OSMParser(object):
         self._all_nodes_callback = all_nodes_callback
         self._ways_callback = ways_callback
 
-    def parse_xml_file(self,file_or_stream):
+    def parse_xml_file(self,filename_or_stream):
         parser = xml.sax.make_parser()
         parser.setContentHandler(self._ContentHandler(
             all_nodes_callback=self._all_nodes_callback,
             ways_callback=self._ways_callback))
-        parser.parse(file_or_stream)
+        parser.parse(filename_or_stream)
 
     class _ContentHandler(xml.sax.handler.ContentHandler):
         MAX_LIST_LENGTH = 10000
