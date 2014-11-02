@@ -15,5 +15,9 @@ data/
 # Setuptools build folder 
 /build/
 
+# Virtual envs
+env
+envs/
+
 
 
