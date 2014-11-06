@@ -1,7 +1,14 @@
-from setuptools import setup
+import json
+import os.path
+import setuptools
 
-setup(name='spiderosm',
-      version='0.3.0',
+
+# get package info from SPIDEROSM.json
+with open(os.path.join('spiderosm','SPIDEROSM_INFO.json')) as fp:
+    spiderosm_info = json.load(fp)
+
+setuptools.setup(name='spiderosm',
+      version=spiderosm_info['version'],
       description='GIS conflation tool for matching street networks.',
       long_description='GIS conflation tool: matches segments in one path network (e.g. streets and trails) to corresponding segments in another, based on geography and network connectivity.  Useful, among other things, for combining jurisdictional centerline data with Open Street Maps data.',
       classifiers=[
@@ -11,10 +18,10 @@ setup(name='spiderosm',
         'Topic :: Scientific/Engineering :: GIS'
       ], 
       keywords='GIS conflation OSM OpenStreetMaps centerline jurisdictional street network matcher',
-      url='http://spiderosm.org',
-      author='Michael Arnold',
-      author_email='mha@spiderosm.com',
-      license='MIT',
+      url=spiderosm_info['homepage'],
+      author=spiderosm_info['author'],
+      author_email=spiderosm_info['author_email'],
+      license=spiderosm_info['license'],
       packages=['spiderosm'],
       install_requires=[
           'pyproj',
