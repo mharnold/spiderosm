@@ -2,8 +2,10 @@
 Testing
 '''
 
-import config
 import importlib
+
+import config
+import log
 
 core_modules = (
         'bins',
@@ -15,6 +17,7 @@ core_modules = (
         'dbinterface',
         'geo',
         'geofeatures',
+        'log',
         'match',
         'misc',
         'osm',
@@ -36,7 +39,7 @@ optional_modules = (
 
 def test_module(name):
     if __package__:  name = __package__ + '.' + name
-    print 'testing module %s...' % name
+    log.info('testing module %s...',name)
     mod = importlib.import_module(name)
     mod.test()
 
@@ -59,4 +62,4 @@ def run_tests():
 if __name__ == "__main__":
     config.read_config_files()
     run_tests()
-    print 'Congratulations, spiderOSM passed all test.'
+    log.info('Congratulations, spiderOSM passed all test.')

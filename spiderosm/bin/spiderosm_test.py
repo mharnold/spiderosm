@@ -3,8 +3,9 @@
 Check that spiderosm is installed and functioning properly.
 '''
 
-import spiderosm.test
 import spiderosm.config
+import spiderosm.log
+import spiderosm.test
 
 #doit
 assert __name__ == "__main__"
@@ -15,6 +16,6 @@ spiderosm.config.read_config_files()
 spiderosm.test.run_tests()
 
 #we only get here if all the tests pass.
-print 'Congratulations!  SpiderOSM appears to be properly installed and functioning.'
+spiderosm.log.info('Congratulations!  SpiderOSM appears to be properly installed and functioning.')
 
 

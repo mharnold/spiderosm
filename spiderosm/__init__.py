@@ -3,6 +3,9 @@
 import json
 import os.path
 
+import crashhandling
+import log
+
 package_dir = os.path.dirname(__file__)
 
 # get package info from SPIDEROSM.json
@@ -14,7 +17,12 @@ LICENSE = spiderosm_info['license']
 HOMEPAGE = spiderosm_info['homepage']
 
 __version__ = spiderosm_info['version']
- 
 
+# configure logging
+log.config(version=__version__)
 
+# setup crash handling
+crashhandling.init()
+
+log.info("Initialized.")
 
