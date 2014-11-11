@@ -3,8 +3,10 @@
 import json
 import os.path
 
+import config
 import crashhandling
 import log
+
 
 package_dir = os.path.dirname(__file__)
 
@@ -15,14 +17,9 @@ AUTHOR = spiderosm_info['author']
 AUTHOR_EMAIL = spiderosm_info['author_email']
 LICENSE = spiderosm_info['license']
 HOMEPAGE = spiderosm_info['homepage']
-
 __version__ = spiderosm_info['version']
 
-# configure logging
 log.config(version=__version__)
-
-# setup crash handling
 crashhandling.init()
-
-log.info("Initialized.")
+log.info(config.settings)
 

@@ -9,8 +9,6 @@ import spiderosm.test
 
 #doit
 assert __name__ == "__main__"
-#get test data dir
-spiderosm.config.read_config_files()
 
 #run tests
 spiderosm.test.run_tests()

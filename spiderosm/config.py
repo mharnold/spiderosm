@@ -46,8 +46,8 @@ def test():
     #print 'settings', settings
     print 'config PASS'
 
-#doit
-test()
+#read config files on load
+read_config_files()
 
 
 

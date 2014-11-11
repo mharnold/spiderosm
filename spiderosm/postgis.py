@@ -7,10 +7,19 @@ import pdb
 import psycopg2
 from psycopg2.extras import DictCursor
 
+import config
 import dbinterface
 
 class PGIS(dbinterface.DatabaseInterface):
-    def __init__(self, dbName, verbose=True):
+    def __init__(self, dbName=None, user=None, password=None, host=None, port=None, verbose=True):
+        conf = config.settings.get
+        self.user = user or conf('postgis_user')
+        self.password = password or conf('postgis_password')
+        self.host = host or conf('postgis_host')
+        self.port = port or conf('posgis_port')
+
+        if not dbName: dbName = conf('postgis_dbname')
+        assert dbName
         super(PGIS,self).__init__(dbName, verbose=verbose)        
 
     # establish database connection 
@@ -18,7 +27,11 @@ class PGIS(dbinterface.DatabaseInterface):
     # Initial database creation (from shell prompt):
     #   % createdb <db_name>
     def _connect(self):
-	con = psycopg2.connect(database=self.db_name)
+	con = psycopg2.connect(database=self.db_name,
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                port=self.port)
 	cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
 	return [con, cur]
 
@@ -45,9 +58,10 @@ class PGIS(dbinterface.DatabaseInterface):
         return [ row[0] for row in rows ]
 
 def test():
-    # requires preexisting spaitially enabled 'test' database:
-    # %createdb test
-    pgis = PGIS('test', verbose=False)
+    # requires preexisting spaitially enabled database:
+    # %createdb <dbname>
+    db_name = config.settings.get('postgis_dbname','spiderosm_test')
+    pgis = PGIS(db_name, verbose=False)
    
     # run tests
     pgis.test(verbose=False)

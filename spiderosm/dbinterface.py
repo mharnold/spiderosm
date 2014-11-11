@@ -16,7 +16,6 @@ class DatabaseInterface(object):
         (self.con, self.cur) = self._connect()
         self._add_spatial_extension()
 
-
     def _connect(self):
         print 'DatabaseInterface._connect() stub: specialize for postgis, spatialite etc.'
 
@@ -89,10 +88,13 @@ class DatabaseInterface(object):
                 SELECT AddGeometryColumn('%(table)s', '%(name)s', %(srid)d, '%(type)s', 2) 
                 ''' % {'table':table, 'name':name, 'srid':srid, 'type':type})  
         #self._create_spatial_index(table,name)
+
+    def drop_table(self, table):
+        self.exec_sql('DROP TABLE IF EXISTS %s' % table)
                                 
     def create_table(self, table, col_specs):
         col_specs = colspecs.fix(col_specs)
-        self.exec_sql('DROP TABLE IF EXISTS %s' % table)
+        self.drop_table(table)
 
         data_specs = []  
         geom_specs = []
@@ -222,27 +224,33 @@ class DatabaseInterface(object):
             commit()
 
     def test(self,verbose=True):
-        ref = (self._interpolation_ref,)
-	self.exec_sql('drop table if exists test_db')
-        self.exec_sql('create table test_db ("a:f1" text, other integer, test_key serial primary key)')
-        self.exec_sql('insert into test_db ("a:f1", other) values (%s, %s)' % (ref*2), 
+        PREFIX = 'spiderosm_test_'
+        TABLE1 = PREFIX + '1_'
+        TABLE2 = PREFIX + '2_'
+        TABLE_SEGS = PREFIX + 'segs_'
+        TABLE_JCTS = PREFIX + 'jcts_'
+
+        ref = self._interpolation_ref
+	self.exec_sql('drop table if exists %s' % TABLE1)
+        self.exec_sql('create table %s ("a:f1" text, other integer, test_key serial primary key)' % TABLE1)
+        self.exec_sql('insert into  %s ("a:f1", other) values (%s, %s)' % (TABLE1,ref,ref),
                 ('''foo's"''', 1))
-        self.exec_sql('''insert into test_db ("a:f1", other) values ('bar', 5)''')
-        self.exec_sql('''insert into test_db ("a:f1") values ('zar')''')
-	table = self.get_table('test_db')
+        self.exec_sql('''insert into %s ("a:f1", other) values ('bar', 5)''' % TABLE1)
+        self.exec_sql('''insert into %s ("a:f1") values ('zar')''' % TABLE1)
+	table = self.get_table(TABLE1)
 
 	assert len(table)==3
 	assert table[1]['other']==5
         assert table[2]['a:f1']=='zar'
-	assert len(table) == self.get_num_rows('test_db')
-        col_names = self.get_column_names('test_db')
+	assert len(table) == self.get_num_rows(TABLE1)
+        col_names = self.get_column_names(TABLE1)
         assert col_names == ['a:f1', 'other', 'test_key']
         # another way to get col_names (but in random order)
         assert len(table[0].keys()) == 3
 
         #add_geometry_column
-        self.add_geometry_column('test_db','geometry','POINT')
-        assert self.get_column_names('test_db') == ['a:f1', 'other', 'test_key', 'geometry']
+        self.add_geometry_column(TABLE1,'geometry','POINT')
+        assert self.get_column_names(TABLE1) == ['a:f1', 'other', 'test_key', 'geometry']
 
         # write_table        
         col_specs = [('id', 'BIGINT'), ('a:name', 'TEXT'), ('length', 'FLOAT'), ('geometry', 'POINT')]
@@ -252,11 +260,11 @@ class DatabaseInterface(object):
         rows.append([3,'michael',5.10, (-122.0, 38.0)])
         rows.append({ 'id':4, 'a:name':None, 'length':100 })
 
-        self.write_table('test_db2', col_specs, rows)
+        self.write_table(TABLE2, col_specs, rows)
 
-        assert  self.get_column_names('test_db2') == ['id', 'a:name', 'length', 'geometry']
+        assert  self.get_column_names(TABLE2) == ['id', 'a:name', 'length', 'geometry']
 
-        rowsr = self.get_table('test_db2')
+        rowsr = self.get_table(TABLE2)
         assert len(rowsr) == 4
         assert rowsr[0]['a:name'] == 'dianna'
         assert rowsr[2]['id'] == 3
@@ -276,14 +284,14 @@ class DatabaseInterface(object):
         geo = geojson.FeatureCollection(features)
         
         #write_geo
-        self.write_geo(geo, 'test_segs', geometry_type='LineString')
-        self.write_geo(geo, 'test_jcts', geometry_type='Point')
+        self.write_geo(geo, TABLE_SEGS, geometry_type='LineString')
+        self.write_geo(geo, TABLE_JCTS, geometry_type='Point')
         
         # table_names
         table_names = self.get_table_names()
 
         #print 'table_names:',table_names
-        assert 'test_db' in table_names
+        assert TABLE1 in table_names
 
         # check for spatial extension
         assert 'spatial_ref_sys' in self.get_table_names()
@@ -291,6 +299,12 @@ class DatabaseInterface(object):
         # check for srid
         rows = self.select('*','spatial_ref_sys','srid=%d'%self.srid)
         assert len(rows) == 1
+
+        # clean up
+        self.drop_table(TABLE1)
+        self.drop_table(TABLE2)
+        self.drop_table(TABLE_SEGS)
+        self.drop_table(TABLE_JCTS)
       
         self.commit()
 

@@ -3,6 +3,7 @@
 import os
 import sys
 
+import config
 import log
 
 orig_excepthook = None
@@ -11,10 +12,14 @@ orig_excepthook = None
 def crash_info_excepthook(exctype, value, traceback):
     log.critical("""sys.version=%s 
   sys.platform=%s 
-  os.name=%s""",
+  os.name=%s
+  config.settings=%s
+  """,
             sys.version,
             sys.platform, 
-            os.name)
+            os.name,
+            config.settings
+            )
 
     orig_excepthook(exctype, value, traceback)
 
