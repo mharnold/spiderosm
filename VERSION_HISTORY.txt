@@ -1,6 +1,7 @@
 SPIDEROSM VERSION HISTORY
 
-v0.3.1  implemented __version__ runtime attribute, and version number as part of testing output.
+v0.3.1  __version__ and other info provided during testing and crashes.  added
+postgis config options (e.g. postgis_dbname and postgis_port)
 v0.3.0  switched to overpass API as primary means of acquiring OSM data.
 Imposm.parser is no longer required. (Hopefully this version will install on Windows)
 v0.2.3  fixed colspecs.py to handle promotions to BIGINT properly for type long.

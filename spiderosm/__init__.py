@@ -7,19 +7,16 @@ import config
 import crashhandling
 import log
 
-
-package_dir = os.path.dirname(__file__)
-
-# get package info from SPIDEROSM.json
-with open(os.path.join(package_dir, 'SPIDEROSM_INFO.json')) as fp:
-    spiderosm_info = json.load(fp)
-AUTHOR = spiderosm_info['author']
-AUTHOR_EMAIL = spiderosm_info['author_email']
-LICENSE = spiderosm_info['license']
-HOMEPAGE = spiderosm_info['homepage']
-__version__ = spiderosm_info['version']
+__version__ = config.info['version']
+AUTHOR = config.info['author']
+AUTHOR_EMAIL = config.info['author_email']
+LICENSE = config.info['license']
+HOMEPAGE = config.info['homepage']
 
 log.config(version=__version__)
 crashhandling.init()
-log.info(config.settings)
+
+log.info('config.info: %s', config.info)
+log.info('config.settings: %s', config.settings)
+
 

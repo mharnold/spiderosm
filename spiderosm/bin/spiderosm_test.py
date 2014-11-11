@@ -13,6 +13,10 @@ assert __name__ == "__main__"
 #run tests
 spiderosm.test.run_tests()
 
+#dump config
+spiderosm.log.info('config.info: %s', spiderosm.config.info)
+spiderosm.log.info('config.settings: %s', spiderosm.config.settings)
+
 #we only get here if all the tests pass.
 spiderosm.log.info('Congratulations!  SpiderOSM appears to be properly installed and functioning.')
 
