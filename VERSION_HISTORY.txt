@@ -1,5 +1,6 @@
 SPIDEROSM VERSION HISTORY
 
+v0.3.2  fixed author email address
 v0.3.1  __version__ and other info provided during testing and crashes.  added
 postgis config options (e.g. postgis_dbname and postgis_port)
 v0.3.0  switched to overpass API as primary means of acquiring OSM data.
