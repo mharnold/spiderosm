@@ -33,7 +33,7 @@ def shp2geojson(inFilename,outFilename,clip_rect=None):
 
     # log messages
     if skipped_no_points > 0:
-        log.warning("%d shapes in %s skipped because they have no geometry.", skipped_no_points, inFilename)
+        log.warning("Skipped %d shapes in %s because they have no geometry.", skipped_no_points, inFilename)
  
     # write the geojson file
     jsonFile = open(outFilename, 'w')
