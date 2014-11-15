@@ -1,5 +1,7 @@
 SPIDEROSM VERSION HISTORY
 
+v0.3.3  fixed robustness issues in postgis.py and shp2geojson.py, added bbox
+calculation to geofeatures.py
 v0.3.2  fixed author email address
 v0.3.1  __version__ and other info provided during testing and crashes.  added
 postgis config options (e.g. postgis_dbname and postgis_port)
