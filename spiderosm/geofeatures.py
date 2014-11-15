@@ -36,12 +36,38 @@ def filter_features(features, feature_func=None, geom_type=None, col_specs=None)
 
     return new_features
 
+def bbox(features):
+    features = _geo_features(features)
+
+    bbox = geo.BBox()
+
+    for feature in features:
+        coords = feature['geometry']['coordinates']
+        _add_coords_to_bbox(bbox, coords)
+    return bbox.rect()
+
+def _add_coords_to_bbox(bbox,coords):
+    if isinstance(coords[0], numbers.Number):
+        #single point
+        bbox.add_point(coords)
+    elif isinstance(coords[0][0], numbers.Number):
+        #list of points
+        bbox.add_points(coords)
+    else:
+        # nested point lists
+        for l in coords:
+            _add_coords_to_bbox(bbox, l)
+
 # allows for nested cooordinate lists
 def coordinates_intersect_rect_q(coords, rect):
-    if isinstance(coords[0][0], numbers.Number):
+    if isinstance(coords[0], numbers.Number):
+        #single point
+        return geo.points_intersect_rect_q((coords,), rect)
+    elif isinstance(coords[0][0], numbers.Number):
+        #list of points
         return geo.points_intersect_rect_q(coords, rect)
     else:
-        # nested coord lists
+        # nested point lists
         for l in coords:
             if coordinates_intersect_rect_q(l, rect): return True
         return False
@@ -50,9 +76,11 @@ def _test_coordinates_intersect_rect_q():
     coords1 = [[0,0], [10,10], [20,20]]
     coords2 = [[100,100], [20,20]]
     coords_l2 = [coords1, coords2]
+    coords3 = [12,50]
     assert coordinates_intersect_rect_q(coords1,[15,15,30,30])
     assert not coordinates_intersect_rect_q(coords1,[25,15,30,30])
     assert coordinates_intersect_rect_q(coords_l2,[90,90,101,101])
+    assert coordinates_intersect_rect_q(coords3, [11,49,13,51])
 
 def test():
     _test_coordinates_intersect_rect_q()
@@ -140,6 +168,9 @@ def test():
     out = filter_features(features, ffunc, geom_type='LineString', col_specs=specs)
     assert len(out) == 1
     assert out[0]['properties']['name'] == 'Ms. TRAIL'
+
+    # bbox
+    assert bbox(features) == (10, 11, 200, 210)
 
     print 'geofeatures PASS'
 

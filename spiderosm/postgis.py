@@ -45,13 +45,14 @@ class PGIS(dbinterface.DatabaseInterface):
 
     _interpolation_ref = '%s'
 
+    # order of column names not guaranteed, so return sorted alphabetically
     def get_column_names(self,table):
        name_per_row = self.select('column_name', 
                  'information_schema.columns',
                   where="table_name='%s'"%table)
        col_names=[]
        for row in name_per_row: col_names.append(row[0])
-       return col_names
+       return sorted(col_names)
 
     def get_table_names(self):
         rows = self.select('table_name','information_schema.tables')

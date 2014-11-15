@@ -323,6 +323,9 @@ class BBox(object):
             x0,y0,x1,y1 = self.box
             self.box = (min(x0,x),min(y0,y),max(x1,x),max(y1,y))
 
+    def add_points(self,points):
+        for point in points: self.add_point(point)
+
 def _test_BBox():
     bb = BBox()
     assert bb.rect() == None
@@ -330,6 +333,8 @@ def _test_BBox():
     assert bb.rect() == (10,100,10,100)
     bb.add_point((-5,120))
     assert bb.rect() == (-5, 100, 10, 120)
+    bb.add_points([(0,0), (105,105), (-10,-10)])
+    assert bb.rect() == (-10, -10, 105, 120)
 
 def _test_linestring_to_points():
     ls = 'LINESTRING(1.1,10.0 2.2, 20.0)'

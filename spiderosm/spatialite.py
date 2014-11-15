@@ -31,9 +31,10 @@ class Slite(dbinterface.DatabaseInterface):
 
     _interpolation_ref = '?'
 
+    # In general, no guaranteed column order, so return alphabetically sorted
     def get_column_names(self, table):
         rows = self.exec_sql_r("PRAGMA table_info(%s)" % table)
-        return[row['name'] for row in rows]
+        return sorted([row['name'] for row in rows])
 
     def get_table_names(self):
         rows = self.exec_sql_r("select name from main.sqlite_master WHERE type='table'")

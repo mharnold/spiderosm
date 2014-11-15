@@ -250,7 +250,7 @@ class DatabaseInterface(object):
 
         #add_geometry_column
         self.add_geometry_column(TABLE1,'geometry','POINT')
-        assert self.get_column_names(TABLE1) == ['a:f1', 'other', 'test_key', 'geometry']
+        assert self.get_column_names(TABLE1) == ['a:f1', 'geometry', 'other', 'test_key']
 
         # write_table        
         col_specs = [('id', 'BIGINT'), ('a:name', 'TEXT'), ('length', 'FLOAT'), ('geometry', 'POINT')]
@@ -261,8 +261,7 @@ class DatabaseInterface(object):
         rows.append({ 'id':4, 'a:name':None, 'length':100 })
 
         self.write_table(TABLE2, col_specs, rows)
-
-        assert  self.get_column_names(TABLE2) == ['id', 'a:name', 'length', 'geometry']
+        assert  self.get_column_names(TABLE2) == ['a:name', 'geometry', 'id', 'length']
 
         rowsr = self.get_table(TABLE2)
         assert len(rowsr) == 4
