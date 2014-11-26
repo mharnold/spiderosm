@@ -268,7 +268,7 @@ segments.
 **city\_pnwk$to\_jct\_id** - id of jct (node/intersection) where this segment terminates.  
 
 **match$avg\_bearing\_delta** - averages difference in bearing for two people walking the segments simultaneously (see DIVERGENCE above)  
-**match$divergence** - approximately the largest distance in feet between this segment and the matched segment.  More accurately imagine, two people starting out at (the same) end of each segment and walking the respective segments to the other end, matching their speed so that the arrive at the end together, and checking the distance between each other at regular intervals.  The divergence is the greatest measured distance between the walkers.  
+**match$divergence** - approximately the largest distance (in meters) between this segment and the matched segment.  More accurately imagine, two people starting out at (the same) end of each segment and walking the respective segments to the other end, matching their speed so that they arrive at the end together, and checking the distance between each other at regular intervals.  The divergence is the greatest measured distance between the walkers.  
 **match$score** - integer between 0 and 100 indicating confidence in segment match. 100 = extremely confident. 0 = exceedingly unlikely the match is correct.  This overall match score is obtained by combining name match, geo match, and bearing match scores.  
 **match$score\_bearing1** - integer between 0 and 100 based on match$avgBearingDelta  
 **match$score\_bearing2** - integer between 0 and 100 rating similarity of the segment bearings at the end points.  

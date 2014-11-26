@@ -31,7 +31,7 @@ class PNwkScore(pnwk_network.PNwkNetwork):
                 (div, avg_bearing_delta) = geo.divergence(self.points,self.match.points,delta)
 
             # p1 based on divergence  (div of 30 meters or more scores 0)
-            p1 = 1.0 - min(div*f,30.0)/30.0
+            p1 = 1.0 - min(div/f,30.0)/30.0
             #print 'p1,div', p1, div
 
             # p2 based on ratio of divergenece to segment length

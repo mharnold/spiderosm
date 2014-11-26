@@ -1,5 +1,8 @@
 SPIDEROSM VERSION HISTORY
 
+v0.3.4  fixed unit conversion bug in divergence computation that exaggerated
+divergence 10x for CRS in ft, e.g Portland, resulting in under reporting of
+mismatched names.
 v0.3.3  fixed robustness issues in postgis.py and shp2geojson.py, added bbox
 calculation to geofeatures.py
 v0.3.2  fixed author email address
