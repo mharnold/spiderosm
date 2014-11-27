@@ -6,7 +6,8 @@ import geojson
 
 import geo
 
-def _geo_features(geo):
+def geo_features(geo):
+    """extracts a list of features, for multiple types of input"""
     features = geo
     try: features = geo.__geo_interface__
     except AttributeError: pass
@@ -15,7 +16,7 @@ def _geo_features(geo):
     return features
 
 def filter_features(features, feature_func=None, geom_type=None, col_specs=None):
-    features = _geo_features(features)
+    features = geo_features(features)
 
     new_features = []
     for feature in features:
@@ -37,7 +38,7 @@ def filter_features(features, feature_func=None, geom_type=None, col_specs=None)
     return new_features
 
 def bbox(features):
-    features = _geo_features(features)
+    features = geo_features(features)
 
     bbox = geo.BBox()
 
@@ -130,12 +131,12 @@ def test():
         def __init__(self,features): 
             self.geo = geojson.FeatureCollection(features)
 
-    # _geo_features()
-    out = _geo_features(features)
+    # geo_features()
+    out = geo_features(features)
     assert len(out)==3 and out[0]['type'] == 'Feature'
-    out = _geo_features(geojson.FeatureCollection(features))
+    out = geo_features(geojson.FeatureCollection(features))
     assert len(out)==3 and out[0]['type'] == 'Feature'
-    out = _geo_features(GeoThingy(features))
+    out = geo_features(GeoThingy(features))
     assert len(out)==3 and out[0]['type'] == 'Feature'
 
     # filter_features() - trivial case

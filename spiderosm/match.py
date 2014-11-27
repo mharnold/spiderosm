@@ -121,7 +121,9 @@ class Match(object):
         if self.city_geojson:
             with open(self.city_geojson) as f:
                 city_geojson = geojson.load(f) 
-            city_nwk = self.centerline_to_pnwk(name='city', features=city_geojson['features'], clip_rect=self.bbox)
+            city_nwk = self.centerline_to_pnwk(name='city', 
+                    features=geofeatures.geo_features(city_geojson), 
+                    clip_rect=self.bbox)
             city_nwk.write_geojson(self.city_network) 
             if self.db: self.db.write_pnwk(city_nwk)
         self.log_end_task()
