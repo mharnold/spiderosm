@@ -438,7 +438,7 @@ class Match(object):
         # gen fixed osm names report (.csv and .geojson files)
         self.gen_fixed_osm_names_report()
 
-def _test_ucb_sw1(out_dir):
+def _test_ucb_sw1(out_dir,db=None):
     project = 'ucb_sw'
     test_data_dir = config.settings['spiderosm_test_data_dir']
     #print 'DEB test_data_dir:',test_data_dir
@@ -448,7 +448,8 @@ def _test_ucb_sw1(out_dir):
             project=project,
             proj4text='+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs',
             units='meters',
-            out_dir=out_dir)
+            out_dir=out_dir,
+            db=db)
 
     #CITY DATA
     m.city_geojson = os.path.join(in_dir,'streets.geojson')
@@ -483,8 +484,17 @@ def test_ucb_sw():
 def test():
     test_ucb_sw()
     print 'match PASS'
+
+def test_sqlite():
+    print 'DEB match with sqlite'
+    import spiderosm.spatialite
+    sqlite_fn = 'data/test.sqlite'
+    db = spiderosm.spatialite.Slite(sqlite_fn)
+    _test_ucb_sw1(out_dir='data',db=db)
    
 #doit
 if __name__ == '__main__':
     config.read_config_files()
     test()
+    #test_sqlite()
+

@@ -76,6 +76,11 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,
 
     return city_street_network
 
+
+# EXAMPLE APPLICATIONS OF centerline.make_pnwk
+# (See also example toplevels e.g. spiderosm/bin/spiderosm_berkeley.py)
+
+# RLIS centerline data -> pnwk
 def rlis_pnwk(features,name=None,props=None,quiet=False,clip_rect=None):
     def rlis_names(feature):
         def _rlis_names0(prefix,street_name,ftype):
@@ -111,6 +116,7 @@ def rlis_pnwk(features,name=None,props=None,quiet=False,clip_rect=None):
             quiet=quiet,
             clip_rect=clip_rect)
 
+#Berkeley centerline data -> pwnk
 def berkeley_pnwk(features, name=None, props=None, quiet=False, clip_rect=None):
     def berkeley_names(feature): 
         names = []

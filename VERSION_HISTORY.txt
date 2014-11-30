@@ -1,5 +1,8 @@
 SPIDEROSM VERSION HISTORY
 
+v0.3.6  added centerline.py rlis_pnwk() and berkeley_pnwk() to top-levels to
+make path to customization more clear.  Documented customization in README.md
+v0.3.5  fixed csv output to work for unicode data.
 v0.3.4  fixed unit conversion bug in divergence computation that exaggerated
 divergence 10x for CRS in ft, e.g Portland, resulting in under reporting of
 mismatched names.

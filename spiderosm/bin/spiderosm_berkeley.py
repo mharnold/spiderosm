@@ -48,7 +48,8 @@ def _match_city():
     m.city_zip = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.zip')
     m.city_shp = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.shp')
     m.city_geojson = os.path.join(out_dir,'streets.geojson')
-    m.centerline_to_pnwk = spiderosm.centerline.berkeley_pnwk
+    #m.centerline_to_pnwk = spiderosm.centerline.berkeley_pnwk
+    m.centerline_to_pnwk = _city_pnwk
     m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
     #OSM DATA (downloaded via overpass API by default)
@@ -64,6 +65,46 @@ def _match_city():
     # do the name crosscheck (results written to out_dir)
     m.names_cross_check()
     #m.names_osm_vs_base()
+
+# centerline data -> pwnk
+def _city_pnwk(features, name=None, props=None, quiet=False, clip_rect=None):
+    def berkeley_names(feature): 
+        names = []
+        props = feature['properties']
+        cat = props['CATEGORY']
+        name = props['FULLNAME']
+        words = name.split(' ')
+        first = words[0]
+        if name=='TRAIL' and cat =='PEDESTRIAN': return names 
+        if name=='RAMP' and cat == 'CONNECTOR': return names
+        if name=='ALLEY': return names
+        if 'UNNAMED' in name: return names
+        names.append(name)
+
+        # add unadorned freeway names.
+        if cat in ('CONNECTOR','HIGHWAY') and len(words)>1 and len(first)>1 and first[0]=='I':
+            try: 
+                if int(first[1:]) > 0: names.append(first)
+            except ValueError: pass
+
+        # for 'HWY 13 N', add 'CA 13'
+        if cat in ('CONNECTOR','HIGHWAY') and first=='HWY' and len(words)>1:
+            try: 
+                if int(words[1]) > 0: names.append('CA ' + words[1])
+            except ValueError: pass
+        return names
+
+    def berkeley_filter(feature):
+        category = feature['properties']['CATEGORY']
+        return category in ('CONNECTOR','HIGHWAY','MAJOR','MINOR','PEDESTRIAN')
+
+    return spiderosm.centerline.make_pnwk(features, 
+            props=props,
+            namesFunc=berkeley_names,
+            filter_func=berkeley_filter,
+            name=name,
+            quiet=quiet,
+            clip_rect=clip_rect)
 
 #doit
 assert __name__ == "__main__"

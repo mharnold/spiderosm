@@ -90,14 +90,13 @@ the current directory at start up, is read.
 
 Here is an example config.spiderosm.json file:
 
-```
-{
-  "gis_data_dir": "/Users/me/GIS/data",
-  "postgis_enabled" : true,
-  "postgis_dbname" : "pdx",
-  "spatialite_enabled" : false 
-}
-```
+
+    {
+        "gis_data_dir": "/Users/me/GIS/data",
+        "postgis_enabled" : true,
+        "postgis_dbname" : "pdx",
+        "spatialite_enabled" : false 
+    }
 
 ### PostGIS
 
@@ -180,12 +179,49 @@ postgis and spatialite)
 This takes about twenty minutes on my machine nearly half of that time is for the rather large 
 OSM download.  If Postgis or Spatialite is enabled runtime will go up.
 
+## Customization
 
-## Using Spiderosm (Once Installed)
+Copy the `spiderosm/bin/spiderosm\_berkeley.py` top-level (or
+`spiderosm\_portland.py`) and modify to suit your needs.  
 
-Copy the spiderosm/bin/spiderosm_berkeley.py top-level (or
-spiderosm_portland.py) and modify to suit your needs.
+Customization includes specifying such things as input files, an appropriate local projection (spatial reference system) and region bounds.  In addition, you will want to customize the `_city_pnwk()` function in the sample top-level to correspond to your particular jurisdicitional 'centerline' data.  This includes specifying how to extract street names form the jurisdicitional attributes, and possible specifying a filter function to exclude extraneous features (e.g. railroad or powerlines.)
 
+### Customizing Canonical Names
+
+You may also want to customize canonical name generation.  This is especially desirable if you are working on a region outside of the USA.  
+
+Before comparing street names in the OSM and jurisdictional data, names from both sources are 'canonicalized':  they are converted to upper-case, special characters are removed, and standard abbreviations are applied.  This is so, for example"North Harvard Street" and "N. HARVARD ST" will both be mapped to "N HARVARD ST" and thus match, as they should.
+
+Here is an example of canonical name customization for Denmark:
+
+
+    # ---------------------------------------------------------
+    # Functions used to override spiderosm defaults
+    # ---------------------------------------------------------
+    def restrict_danish_chars(name):
+        ALLOWED_CHARS = string.ascii_letters + string.digits + "-" + " " + u"æøåÆØÅ"  # others get mapped to ' ' 
+        IGNORE_CHARS = "'"
+        out = []
+        for c in name:
+            if c in ALLOWED_CHARS: 
+                out.append(c) 
+            else:
+                if c not in IGNORE_CHARS: out.append(' ')
+        return ''.join(out)
+
+    rewrites = {
+                    'GAMMEL':'GL',
+                    'DOKTOR':'DR',
+                }
+
+    # --------------------------------------------------------
+    # Monkey patching!!!!
+    # --------------------------------------------------------
+    spiderosm.cannames.restrict_chars = restrict_danish_chars
+    spiderosm.cannames.rewrites = rewrites
+
+This works fine.  But,
+I plan to provide hooks, to allow cleaner canonical name customization, very soon!
 
 ## Data Formts
 
@@ -275,4 +311,5 @@ segments.
 **match$score\_geo1** - integer between 0 and 100 rating similarity of the segment geometries based on match$divergence.  
 **match$score\_geo2** - integer between 0 and 100 rating similarity of segment geometries based on ratio of match$divergence to the segment length.   
 **match$score\_name** - integer between 0 and 100 rating similarity of names between this and matched segment.  It is obtained from the ratio of the levenshtein edit distance to the name length.  
+
 

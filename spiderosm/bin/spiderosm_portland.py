@@ -56,6 +56,8 @@ def _match_city():
     m.city_shp= os.path.join(gis_data_dir,'centerline','rlis','streets','streets.shp')
     m.city_geojson = os.path.join(out_dir,'streets.geojson')
     m.centerline_to_pnwk = spiderosm.centerline.rlis_pnwk
+    #UNCOMMENT NEXT LINE TO USE CUSTOMIZED centerline -> pnwk CODE: FURTHER DOWN IN THIS FILE. 
+    #m.centerline_to_pnwk = _city_pnwk
     #m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
     #OSM DATA (downloaded via overpass API by default)
@@ -72,6 +74,45 @@ def _match_city():
     # do the name crosscheck (results written to out_dir)
     m.names_cross_check()
     #m.names_osm_vs_base()
+
+# centerline data -> pnwk
+# If you customize this code, be sure to uncomment:
+# "m.centerline_to_pnwk = _city_pnwk" in _match_city() above.
+# ALSO SEE _city_pnwk() in spiderosm_berkeley.py for an example of FEATURE FILTERING.
+def _city_pnwk(features,name=None,props=None,quiet=False,clip_rect=None):
+    def rlis_names(feature):
+        def _rlis_names0(prefix,street_name,ftype):
+            #print 'DEBUG _rlis_names0 prefix,street_name,ftype', prefix,street_name,ftype
+
+            if not street_name or street_name=='UNNAMED': return []
+            names = []
+
+            # <prefix> <street_name> <ftype>
+            name = ''
+            if prefix: name += (prefix + ' ')
+            name += street_name
+            if ftype: name += (' ' + ftype)
+            names.append(name)
+
+            # split out names in RAMPs
+            if ftype == 'RAMP':
+                for sname in street_name.split('-'):
+                    names += _rlis_names0(prefix,sname,'')
+                    names += _rlis_names0('',sname,'')  # want 'I205' not 'NE I205'
+            
+            #print 'DEBUG _rlis_names0 names', names 
+            return names
+        properties = feature['properties']
+        prefix = properties.get('PREFIX')
+        street_name = properties.get('STREETNAME')
+        ftype = properties.get('FTYPE')
+        return _rlis_names0(prefix,street_name,ftype)
+    return spiderosm.centerline.make_pnwk(features,
+            props=props,
+            namesFunc=rlis_names,
+            name=name,
+            quiet=quiet,
+            clip_rect=clip_rect)
 
 #doit
 assert __name__ == "__main__"
