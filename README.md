@@ -112,7 +112,7 @@ In addition to *postgis_enabled*, the following configuration options are suppor
 
 ### Spatialite
 
-If *spatialite_enabled* (see 'Config Files' above) is set you will need the python pakcage pyspatialite:
+If *spatialite_enabled* (see 'Config Files' above) is set you will need the python package pyspatialite:
 
 ```
 % pip install --upgrade pyspatialite
