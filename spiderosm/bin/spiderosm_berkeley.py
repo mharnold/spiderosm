@@ -66,7 +66,7 @@ def _match_city():
     m.names_cross_check()
     #m.names_osm_vs_base()
 
-# centerline data -> pwnk
+# centerline data -> pnwk
 def _city_pnwk(features, name=None, props=None, quiet=False, clip_rect=None):
     def berkeley_names(feature): 
         names = []

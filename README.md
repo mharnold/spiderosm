@@ -186,6 +186,12 @@ Copy the `spiderosm/bin/spiderosm\_berkeley.py` top-level (or
 
 Customization includes specifying such things as input files, an appropriate local projection (spatial reference system) and region bounds.  In addition, you will want to customize the `_city_pnwk()` function in the sample top-level to correspond to your particular jurisdicitional 'centerline' data.  This includes specifying how to extract street names form the jurisdicitional attributes, and possible specifying a filter function to exclude extraneous features (e.g. railroad or powerlines.)
 
+### Spatial Reference System / Projection
+
+I have personally found the specification of Spatial Reference Systems / Projections to be kind of a mess, and a big time sink when coding for GIS projects.  At a minimum there seems to be a learning-curve involved!  I am attempting to make this as straight-forward and automatic, i.e., painless, as possible in spiderosm. But this is still a work in progress!
+
+Geographic coordinates are not appropriate for matching path networks, rather planar coordinates in units of "meters" or "feet" are required.  If the units are in "feet" this must be specified explicitly when initializing a Match object or PNwk (Path Network.)  Spiderosm uses proj4.  Typically projections are specified via the proj4text argument to Match() or PNwk(). 
+
 ### Customizing Canonical Names
 
 You may also want to customize canonical name generation.  This is especially desirable if you are working on a region outside of the USA.  
@@ -223,7 +229,7 @@ Here is an example of canonical name customization for Denmark:
 This works fine.  But,
 I plan to provide hooks, to allow cleaner canonical name customization, very soon!
 
-## Data Formts
+## Data Formats
 
 ### GeoJson (.geojson)
 

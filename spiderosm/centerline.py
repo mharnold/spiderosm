@@ -116,7 +116,7 @@ def rlis_pnwk(features,name=None,props=None,quiet=False,clip_rect=None):
             quiet=quiet,
             clip_rect=clip_rect)
 
-#Berkeley centerline data -> pwnk
+#Berkeley centerline data -> pnwk
 def berkeley_pnwk(features, name=None, props=None, quiet=False, clip_rect=None):
     def berkeley_names(feature): 
         names = []

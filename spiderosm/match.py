@@ -21,11 +21,12 @@ import misc
 import osm
 import pnwk
 import shp2geojson
+import spatialref
 
 class Match(object):
     def __init__(self, 
             project, 
-            proj4text,
+            proj4text=None,
             units=None,
             bbox=None,
             out_dir=None,
@@ -37,7 +38,7 @@ class Match(object):
 
         # properties
         self.project = project
-        self.proj4text = proj4text
+        self._proj4text = proj4text
         self.units = units
         self.bbox = bbox
         self.out_dir = out_dir
@@ -67,8 +68,29 @@ class Match(object):
         self.log_current_task = None       
 
         # setup
-        self.projection = geo.Projection(proj4text)
+        self._projection = None
         if not os.path.exists(out_dir): os.makedirs(out_dir)
+
+    @property
+    def proj4text(self):
+        if not self._proj4text and self.city_shp:
+            self._proj4text = spatialref.proj4_from_shapefile(self.city_shp)
+            print 'DEB derived proj4_text:', self.proj4text
+        return self._proj4text
+
+    @proj4text.setter
+    def proj4text(self, value):
+        self._proj4text = value
+
+    @property
+    def projection(self):
+        if not self._projection:
+            self._projection = geo.Projection(self.proj4text)
+        return self._projection
+
+    @projection.setter
+    def projection(self,value):
+        self._projection = value
 
     def log(self,msg):
         now = str(datetime.datetime.now())
@@ -491,10 +513,49 @@ def test_sqlite():
     sqlite_fn = 'data/test.sqlite'
     db = spiderosm.spatialite.Slite(sqlite_fn)
     _test_ucb_sw1(out_dir='data',db=db)
+
+def test_derive_proj4text():
+    project = 'ucb_sw'
+    test_data_dir = config.settings['spiderosm_test_data_dir']
+    #print 'DEB test_data_dir:',test_data_dir
+    in_dir = os.path.join(test_data_dir,'input',project)
+    out_dir='data'
+    db=None
+
+    m = Match(
+            project=project,
+            #proj4text='+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs',
+            units='meters',
+            out_dir=out_dir,
+            db=db)
+
+    #CITY DATA
+    gis_data_dir = config.settings.get('gis_data_dir', 'data')
+    m.city_shp = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.shp')
+    m.city_geojson = os.path.join(in_dir,'streets.geojson')
+    m.centerline_to_pnwk = centerline.berkeley_pnwk
+    m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
+
+    #OSM DATA
+    m.osm = os.path.join(in_dir,'ucb_sw.osm.xml')
+    m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
+
+    # do the name crosscheck (results written to out_dir)
+    m.names_cross_check()
+
+    # check results
+    names_report_file = os.path.join(out_dir,'name_mismatches.csv')
+    rows = csvif.read_table(names_report_file)
+    assert len(rows) == 7
+    assert rows[2] == ['FRANK SCHLESSINGER WAY',
+            'CROSS CAMPUS RD',
+            'http://www.openstreetmap.org/way/22278224',
+            'True']
    
 #doit
 if __name__ == '__main__':
     config.read_config_files()
     test()
     #test_sqlite()
+    #test_derive_proj4text()
 
