@@ -26,18 +26,31 @@ import spatialref
 class Match(object):
     def __init__(self, 
             project, 
+            srs=None,
             proj4text=None,
             units=None,
             bbox=None,
             out_dir=None,
             db=None):
 
+        if srs:
+            if units:
+                assert srs.units == units
+            else: 
+                units = srs.units
+
+            if proj4text:
+                assert sers.proj4text == proj4text
+            else:
+                proj4text = srs.proj4text
+            
         # argument defaults 
         if not out_dir: out_dir = 'data'
         if not units: units = 'meters'
 
         # properties
         self.project = project
+        self.srs = srs
         self._proj4text = proj4text
         self.units = units
         self.bbox = bbox
@@ -514,6 +527,13 @@ def test_sqlite():
     db = spiderosm.spatialite.Slite(sqlite_fn)
     _test_ucb_sw1(out_dir='data',db=db)
 
+def test_postgis():
+    print 'DEB match with postgis'
+    import spiderosm.postgis
+    db_name = config.settings.get('postgis_dbname','spiderosm_test')
+    db = spiderosm.postgis.PGIS(db_name)
+    _test_ucb_sw1(out_dir='data',db=db)
+
 def test_derive_proj4text():
     project = 'ucb_sw'
     test_data_dir = config.settings['spiderosm_test_data_dir']
@@ -554,8 +574,8 @@ def test_derive_proj4text():
    
 #doit
 if __name__ == '__main__':
-    config.read_config_files()
     test()
     #test_sqlite()
+    #test_postgis()
     #test_derive_proj4text()
 

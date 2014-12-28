@@ -30,6 +30,7 @@ core_modules = (
         'pnwk_network',
         'pnwk_score',
         'shp2geojson',
+        'spatialref'
         )
 
 optional_modules = (
@@ -60,6 +61,5 @@ def run_tests():
 
 #doit
 if __name__ == "__main__":
-    config.read_config_files()
     run_tests()
     log.info('Congratulations, spiderOSM passed all test.')

@@ -8,11 +8,21 @@ import tempfile
 
 import pyspatialite
 import pyspatialite.dbapi2 
+
+import config
 import dbinterface
 
 class Slite(dbinterface.DatabaseInterface):
-    def __init__(self, dbName, verbose=True):
-        super(Slite,self).__init__(dbName, verbose=verbose)        
+    def __init__(self, dbName, srid=None, srs=None, verbose=True):
+        if not srid and srs:
+            srid = srs.postgis('postgis_srid')
+        if not srid:
+            srid = config.settings.get('spatialite_srid')
+        if not srid:
+            srid = 4326   # longlat, ESPG:4326 
+
+        if not srid: srid = config.settings.get('spatialite_srid')
+        super(Slite,self).__init__(dbName, srid=srid, verbose=verbose)        
 
     # establish database connection 
     def _connect(self):

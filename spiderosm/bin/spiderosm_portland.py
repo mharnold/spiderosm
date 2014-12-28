@@ -13,15 +13,31 @@ import spiderosm.match
 def _match_city():
     global spiderosm
 
+    # dirs
     project = 'portland'
     gis_data_dir = spiderosm.config.settings.get('gis_data_dir', 'data')
     out_dir = spiderosm.config.settings.get('out_dir', os.path.join('data',project))
     spiderosm.log.info('gis_data_dir=%s out_dir=%s', gis_data_dir, out_dir)
+    
+    # bounding box
     # if bbox set to None, city data bounding box plus a buffer is used.
     # approximately portland city boundary, with 1 mile buffer.
     portland_bbox = (7604005.67,651319.12,7696978.42,732248.02)
     bbox = spiderosm.geo.buffer_box(portland_bbox,5280) # buffer by 1 mi
     spiderosm.log.info('gis_data_dir=%s out_dir=%s\n  bbox: %s' % (gis_data_dir, out_dir, str(bbox)))
+    
+    # spatial reference system
+    #NAD_1983_HARN_StatePlane_Oregon_North_FIPS_3601_Feet_Intl
+    srs = spiderosm.spatialref.SRS(
+            url="http://www.spatialreference.org/ref/sr-org/6856/",
+            units='feet',
+            # proj4text missing at url as of 12/27/2014
+            proj4text = '+proj=lcc +lat_1=44.33333333333334 +lat_2=46 +lat_0=43.66666666666666 +lon_0=-120.5 +x_0=2500000 +y_0=0 +datum=NAD83 +units=ft +no_defs',
+
+            spatialite_srid=spiderosm.config.settings.get('spatialite_srid'),
+            postgis_srid=spiderosm.config.settings.get('postgis_srid')
+            )
+    spiderosm.log.info('srs info:\n%s', srs.info())
 
     # make sure out_dir exists
     if not os.path.exists(out_dir): os.makedirs(out_dir)
@@ -42,10 +58,7 @@ def _match_city():
 
     m = spiderosm.match.Match(
             project=project,
-            #NAD_1983_HARN_StatePlane_Oregon_North_FIPS_3601_Feet_Intl
-            #http://spatialreference.org/ref/sr-org/6856/
-            proj4text = '+proj=lcc +lat_1=44.33333333333334 +lat_2=46 +lat_0=43.66666666666666 +lon_0=-120.5 +x_0=2500000 +y_0=0 +datum=NAD83 +units=ft +no_defs',
-            units='feet',
+            srs=srs,
             bbox=bbox,
             db=db,
             out_dir=out_dir)

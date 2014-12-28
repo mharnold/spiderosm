@@ -9,14 +9,25 @@ import spiderosm.centerline
 import spiderosm.config
 import spiderosm.log
 import spiderosm.match
+import spiderosm.spatialref
 
 def _match_city():
     global spiderosm
 
+    # dirs
     project = 'berkeley'
     gis_data_dir = spiderosm.config.settings.get('gis_data_dir', 'data')
     out_dir = spiderosm.config.settings.get('out_dir', os.path.join('data',project))
     spiderosm.log.info('gis_data_dir=%s out_dir=%s', gis_data_dir, out_dir)
+
+    # spatial reference system
+    srs = spiderosm.spatialref.SRS(
+            url="http://www.spatialreference.org/ref/epsg/wgs-84-utm-zone-10n/",
+            units='meters',
+            spatialite_srid=spiderosm.config.settings.get('spatialite_srid'),
+            postgis_srid=spiderosm.config.settings.get('postgis_srid')
+            )
+    spiderosm.log.info('srs info:\n%s', srs.info())
 
     # make sure out_dir exists
     if not os.path.exists(out_dir): os.makedirs(out_dir)
@@ -25,20 +36,19 @@ def _match_city():
     if  spiderosm.config.settings.get('postgis_enabled'):
         import spiderosm.postgis
         db_name = spiderosm.config.settings.get('postgis_dbname', project)
-        db = spiderosm.postgis.PGIS(db_name)
+        db = spiderosm.postgis.PGIS(db_name, srs=srs)
         spiderosm.log.info('Results will be written to postgis database %s', project)
     elif spiderosm.config.settings.get('spatialite_enabled'):
         import spiderosm.spatialite
         sqlite_fn = os.path.join(out_dir, project + '.sqlite')
-        db = spiderosm.spatialite.Slite(sqlite_fn)
+        db = spiderosm.spatialite.Slite(sqlite_fn, srs=srs)
         spiderosm.log.info('Results will be written to spatialite database %s', sqlite_fn)
     else:
         db = None
-       
+
     m = spiderosm.match.Match(
             project=project,
-            proj4text='+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs',
-            units='meters',
+            srs=srs,
             db=db,
             out_dir=out_dir)
 

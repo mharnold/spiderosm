@@ -11,7 +11,7 @@ import config
 import dbinterface
 
 class PGIS(dbinterface.DatabaseInterface):
-    def __init__(self, dbName=None, user=None, password=None, host=None, port=None, verbose=True):
+    def __init__(self, dbName=None, user=None, password=None, host=None, port=None, srid=None, srs=None, verbose=True):
         conf = config.settings.get
         self.user = user or conf('postgis_user')
         self.password = password or conf('postgis_password')
@@ -20,7 +20,14 @@ class PGIS(dbinterface.DatabaseInterface):
 
         if not dbName: dbName = conf('postgis_dbname')
         assert dbName
-        super(PGIS,self).__init__(dbName, verbose=verbose)        
+        if not srid and srs:
+            srid = srs.postgis('postgis_srid')
+        if not srid:
+            srid = conf('postgis_srid')
+        if not srid:
+            srid = 4326   # longlat, ESPG:4326 
+
+        super(PGIS,self).__init__(dbName, srid=srid, srs=srs, verbose=verbose)        
 
     # establish database connection 
     # NOTE: postgres server must be running and database must already exist 
@@ -62,7 +69,7 @@ def test():
     # requires preexisting spaitially enabled database:
     # %createdb <dbname>
     db_name = config.settings.get('postgis_dbname','spiderosm_test')
-    pgis = PGIS(db_name, verbose=False)
+    pgis = PGIS(db_name, srid=4326, verbose=False)
    
     # run tests
     pgis.test(verbose=False)

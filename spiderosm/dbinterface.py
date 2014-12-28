@@ -7,12 +7,13 @@ import geo
 class DatabaseInterface(object):
     ''' Base class for postgis, and spatiallite database interfaces'''
 
-    def __init__(self, db_name, srid=None, verbose=True):
+    def __init__(self, db_name, srid=None, srs=None, verbose=True):
         self.db_name = db_name
-        if not srid:  srid = 4326 # default to WGS84 longlat
         self.srid = srid
+        self.srs = srs
         self.verbose = verbose
         if self.verbose: print 'Connecting to database %s' % db_name
+        
         (self.con, self.cur) = self._connect()
         self._add_spatial_extension()
 
@@ -216,7 +217,7 @@ class DatabaseInterface(object):
                 print 'dbinterface.py WARNING:', msg
         else:
             assert len(existing) == 0
-            print 'dbinterface.py:', 'Adding spatial reference system (srid=%d) to postgis database %s' % (
+            print 'dbinterface.py:', 'Adding spatial reference system (srid=%d) to database %s' % (
                 srs_info['srid'],
                 db_name)
             colspecs = [ (col,'generic') for col in ('srid','auth_name','auth_srid','proj4text','srtext')]
