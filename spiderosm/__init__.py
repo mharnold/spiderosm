@@ -16,7 +16,4 @@ HOMEPAGE = config.info['homepage']
 log.config(version=__version__)
 crashhandling.init()
 
-log.info('config.info: %s', config.info)
-log.info('config.settings: %s', config.settings)
-
-
+config.log_settings()

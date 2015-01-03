@@ -8,6 +8,9 @@ import sys
 import time
 import zipfile
 
+def module_loaded_q(mod_name):
+    return mod_name in sys.modules.keys()
+
 # print immediately (no buffering)
 def print_now(s, noNewLine=False):
     if noNewLine:
@@ -72,11 +75,17 @@ def _test_print_now():
     time.sleep(5)
     print_now('d')
 
-def test(all_=False):
-    if all_: _test_dates()
-    if all_: _test_print_now()
+def _test_module_loaded_q():
+    assert module_loaded_q('sys')
+    assert module_loaded_q('time')
+    assert not module_loaded_q('foobar')
+
+def test():
+    _test_module_loaded_q()
+    #_test_dates()
+    #_test_print_now()
     print 'misc PASS'
 
 #doit
-test()
-#test(all_=True)
+if __name__ == "__main__":
+    test()

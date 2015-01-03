@@ -8,12 +8,14 @@ import sys
 import itertools
 import json 
 
+import geojson
 import shapefile #pip pyshp
 
 import geofeatures
 import log
+import spatialref
 
-def shp2geojson(inFilename,outFilename,clip_rect=None):
+def shp2geojson(inFilename,outFileName,clip_rect=None, srs=None):
     # read the shapefile
     reader = shapefile.Reader(inFilename)
     fields = reader.fields[1:]
@@ -29,18 +31,15 @@ def shp2geojson(inFilename,outFilename,clip_rect=None):
         geom = ss.__geo_interface__
         if not clip_rect or geofeatures.coordinates_intersect_rect_q(geom['coordinates'],clip_rect):
             #print 'DEB geom:', geom
-            features.append(dict(type='Feature', geometry=geom, properties=atr)) 
+            #features.append(dict(type='Feature', geometry=geom, properties=atr)) 
+            features.append(geojson.Feature(geometry=geom, properties=atr)) 
 
     # log messages
     if skipped_no_points > 0:
         log.warning("Skipped %d shapes in %s because they have no geometry.", skipped_no_points, inFilename)
- 
+
     # write the geojson file
-    jsonFile = open(outFilename, 'w')
-    jsonFile.write(
-            json.dumps({'type':'FeatureCollection', 'features':features}, indent=2) 
-            + "\n")
-    jsonFile.close()
+    geofeatures.write_geojson(features, outFileName, srs=srs)
 
 def test():
     print 'shp2geojson PASS'

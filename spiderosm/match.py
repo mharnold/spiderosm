@@ -150,7 +150,7 @@ class Match(object):
         self.log_begin_task('building city network')
         # shp -> geojson
         if self.city_shp:
-            shp2geojson.shp2geojson(self.city_shp, self.city_geojson, clip_rect=self.bbox)
+            shp2geojson.shp2geojson(self.city_shp, self.city_geojson, clip_rect=self.bbox, srs=self.srs)
 
         # geojson -> pnwk
         if self.city_geojson:
@@ -159,6 +159,7 @@ class Match(object):
             city_nwk = self.centerline_to_pnwk(name='city', 
                     features=geofeatures.geo_features(city_geojson), 
                     clip_rect=self.bbox)
+            city_nwk.srs = self.srs
             city_nwk.write_geojson(self.city_network) 
             if self.db: self.db.write_pnwk(city_nwk)
         self.log_end_task()
@@ -168,7 +169,7 @@ class Match(object):
         if not self.city_network: return
         self.log_begin_task('setting bbox from city network')
        
-        city_nwk = pnwk.PNwk(name='city',filename=self.city_network,units=self.units)
+        city_nwk = pnwk.PNwk(name='city',filename=self.city_network,units=self.units, srs=self.srs)
         city_bbox = city_nwk.get_bbox()
         print 'city_bbox:', city_bbox
 
@@ -190,7 +191,7 @@ class Match(object):
         if not self.osm_network: return
         self.log_begin_task('setting bbox from osm network')
        
-        osm_nwk = pnwk.PNwk(name='osm',filename=self.osm_network,units=self.units)
+        osm_nwk = pnwk.PNwk(name='osm',filename=self.osm_network,units=self.units, srs=self.srs)
         osm_bbox = osm_nwk.get_bbox()
         print 'osm_bbox:', osm_bbox
 
@@ -215,6 +216,7 @@ class Match(object):
         # osm -> geojson
         osm_data = osm.OSMData(in_fname, 
                 clip_rect=self.bbox, 
+                srs=self.srs,
                 target_proj=self.proj4text)
         osm_data.write_geojson(out_fname) # .osm.geojson
         if self.db: 
@@ -256,8 +258,8 @@ class Match(object):
         if not self.city_network: return
         if not self.osm_network: return
         self.log_begin_task('matching city to osm network')
-        city_nwk = pnwk.PNwk(filename=self.city_network, name='city',units=self.units)
-        osm_nwk = pnwk.PNwk(filename=self.osm_network, name='osm',units=self.units)
+        city_nwk = pnwk.PNwk(filename=self.city_network, name='city',units=self.units, srs=self.srs)
+        osm_nwk = pnwk.PNwk(filename=self.osm_network, name='osm',units=self.units, srs=self.srs)
         self.match_pnwks(osm_nwk, city_nwk)
         self.log_end_task()
 
@@ -265,8 +267,8 @@ class Match(object):
         if not self.osm_network: return
         if not self.base_network: return
         self.log_begin_task('matching osm to base network')
-        base_nwk = pnwk.PNwk(filename=self.base_network, name='base',units=self.units)
-        osm_nwk = pnwk.PNwk(filename=self.osm_network, name='osm',units=self.units)
+        base_nwk = pnwk.PNwk(filename=self.base_network, name='base',units=self.units, srs=self.srs)
+        osm_nwk = pnwk.PNwk(filename=self.osm_network, name='osm',units=self.units, srs=self.srs)
         self.match_pnwks(osm_nwk, base_nwk, match_suffix='_osm2base')
         self.log_end_task()
 
@@ -285,7 +287,8 @@ class Match(object):
             osm_matched = pnwk.PNwk(
                 filename = os.path.join(self.out_dir, 'osm_matched'),
                 name = 'osm',
-                units = self.units)
+                units = self.units,
+                srs=self.srs)
         except IOError:
             self.log('Could not read osm_matched network, skipping mismatched_name_report')
             return
@@ -321,10 +324,8 @@ class Match(object):
         self.projection.project_geo_features(webmap,rev=True)
         
         # write out geojson for webmap
-        geo = geojson.FeatureCollection(webmap)
         fname = os.path.join(self.out_dir,'name_mismatches.geojson')
-        with open(fname, 'w') as f:
-            geojson.dump(geo,f,indent=2,sort_keys=True)
+        geofeatures.write_geojson(webmap,fname)
 
         # make unique and sorted
         unique = []
@@ -372,7 +373,8 @@ class Match(object):
             osm_matched = pnwk.PNwk(
                 filename=os.path.join(self.out_dir,'osm_osm2base'),
                 name = 'osm',
-                units = self.units)
+                units = self.units,
+                srs = self.srs)
         except IOError:
             self.log('Could not read osm_osm2base matched network, skipping fixed (OSM) names report')
             return
@@ -404,10 +406,8 @@ class Match(object):
         self.projection.project_geo_features(webmap,rev=True)
         
         # write out geojson for webmap
-        geo = geojson.FeatureCollection(webmap)
         fname = os.path.join(self.out_dir,'name_fixes.geojson')
-        with open(fname, 'w') as f:
-            geojson.dump(geo,f,indent=2,sort_keys=True)
+        geofeatures.write_geojson(webmap,fname)
 
         # make unique and sorted
         unique = []
@@ -478,11 +478,13 @@ def _test_ucb_sw1(out_dir,db=None):
     test_data_dir = config.settings['spiderosm_test_data_dir']
     #print 'DEB test_data_dir:',test_data_dir
     in_dir = os.path.join(test_data_dir,'input',project)
+
+    berkeley_url = "http://www.spatialreference.org/ref/epsg/wgs-84-utm-zone-10n/"
+    srs=spatialref.SRS(url=berkeley_url)
     
-    m = Match(
+    m = Match( 
             project=project,
-            proj4text='+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs',
-            units='meters',
+            srs=srs,
             out_dir=out_dir,
             db=db)
 
@@ -507,7 +509,14 @@ def _test_ucb_sw1(out_dir,db=None):
             'http://www.openstreetmap.org/way/22278224',
             'True']
 
-def test_ucb_sw():
+def test_ucb_sw(out_dir=None):
+
+    # if out_dir specified, use it, and keep it.
+    if out_dir:
+        if os.path.exists(out_dir): shutil.rmtree(out_dir)
+        _test_ucb_sw1(out_dir=out_dir)
+        return
+
     tmp_dir = tempfile.gettempdir()
     out_dir = os.path.join(tmp_dir,'ucb_sw')
     if os.path.exists(out_dir): shutil.rmtree(out_dir)
@@ -516,8 +525,8 @@ def test_ucb_sw():
     finally:
         if os.path.exists(out_dir): shutil.rmtree(out_dir)
 
-def test():
-    test_ucb_sw()
+def test(out_dir=None):
+    test_ucb_sw(out_dir=out_dir)
     print 'match PASS'
 
 def test_sqlite():
@@ -526,6 +535,9 @@ def test_sqlite():
     sqlite_fn = 'data/test.sqlite'
     db = spiderosm.spatialite.Slite(sqlite_fn)
     _test_ucb_sw1(out_dir='data',db=db)
+
+def test_postgis():
+    print 'DEB match with postgis'
 
 def test_postgis():
     print 'DEB match with postgis'
@@ -575,6 +587,7 @@ def test_derive_proj4text():
 #doit
 if __name__ == '__main__':
     test()
+    #test(out_dir='out')
     #test_sqlite()
     #test_postgis()
     #test_derive_proj4text()

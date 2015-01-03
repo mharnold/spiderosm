@@ -5,6 +5,7 @@ import pdb
 import geojson
 
 import geo
+import spatialref
 
 def geo_features(geo):
     """extracts a list of features, for multiple types of input"""
@@ -15,6 +16,39 @@ def geo_features(geo):
     except TypeError: pass
     return features
 
+def geo_feature_collection(geo, srs=None):
+    """return a feature collection for multiple types of input.
+    Add coordinate ref system, if srs arg given."""
+
+    # handle geo_interface
+    try: geo = geo.__geo_interface__
+    except AttributeError: pass
+    
+    # input is already a feature collection? 
+    type = None
+    try: type = geo['type'] 
+    except: pass
+    isfc = (type=='FeatureCollection')
+
+    if isfc:
+        fc = geo
+    
+    else:
+        features = geo_features(geo)
+        fc = geojson.FeatureCollection(features)
+
+    # add coordinate reference system, if srs supplied
+    if srs:  fc.crs = spatialref.geojson_crs(srs)
+
+    return fc
+        
+def write_geojson(features, outFileName, srs=None):
+
+    fc = geo_feature_collection(features, srs=srs)        
+
+    with open(outFileName,'w') as f:
+        geojson.dump(fc,f,indent=2)
+ 
 def filter_features(features, feature_func=None, geom_type=None, col_specs=None):
     features = geo_features(features)
 
@@ -139,6 +173,19 @@ def test():
     out = geo_features(GeoThingy(features))
     assert len(out)==3 and out[0]['type'] == 'Feature'
 
+    #geo_feature_collection() 
+    berkeley_url = "http://www.spatialreference.org/ref/epsg/wgs-84-utm-zone-10n/"
+    srs=spatialref.SRS(url=berkeley_url)
+    fc = geo_feature_collection(GeoThingy(features),srs=srs)
+    assert fc['crs']['properties'] and fc['crs']['type'] 
+    assert len(fc['features']) == 3
+    fc = geo_feature_collection(fc)
+    assert fc['crs']['properties'] and fc['crs']['type'] 
+    assert len(fc['features']) == 3
+    fc = geo_feature_collection(features,srs=srs)
+    assert fc['crs']['properties'] and fc['crs']['type'] 
+    assert len(fc['features']) == 3
+
     # filter_features() - trivial case
     assert len(filter_features([])) == 0
     
@@ -176,4 +223,5 @@ def test():
     print 'geofeatures PASS'
 
 #doit
-test()
+if __name__=="__main__":
+    test()

@@ -29,6 +29,8 @@ import os.path
 import sys
 import urllib2
 
+import geojson.crs
+
 import config
 import log
 
@@ -175,6 +177,15 @@ def proj4_from_shapefile(shp_file):
     wkt_text = srtext_from_shapefile(shp_file)
     return wkt2proj4(wkt_text)
 
+def geojson_crs(srs):
+    if not srs or not srs.url: return None
+    assert "spatialreference.org" in srs.url
+    properties = {
+            "href": srs.url + "ogcwkt/",
+            "type": "ogcwkt"
+            }
+    return geojson.crs.Linked(properties=properties)
+
 def test():
     import_osr()
 
@@ -218,6 +229,9 @@ def test():
     db_srid = berkeley_auth_srid + DB_SRID_OFFSET
     assert srs.spatialite_srid == db_srid
     assert srs.postgis_srid == db_srid
+    #print 'geojson_crs:',geojson_crs(srs)
+    assert geojson_crs(None) == None
+    assert geojson_crs(srs)["type"]=="link"
 
     #print srs.info()
 if __name__=="__main__":

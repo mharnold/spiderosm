@@ -46,12 +46,12 @@ def _match_city():
     if  spiderosm.config.settings.get('postgis_enabled'):
         import spiderosm.postgis
         db_name = spiderosm.config.settings.get('postgis_dbname', project)
-        db = spiderosm.postgis.PGIS(db_name)
+        db = spiderosm.postgis.PGIS(db_name, srs=srs)
         spiderosm.log.info('Results will be written to postgis database %s', db_name)
     elif spiderosm.config.settings.get('spatialite_enabled'):
         import spiderosm.spatialite
         sqlite_fn = os.path.join(out_dir, project + '.sqlite')
-        db = spiderosm.spatialite.Slite(sqlite_fn)
+        db = spiderosm.spatialite.Slite(sqlite_fn, srs=srs)
         spiderosm.log.info('Results will be written to spatialite database %s', sqlite_fn)
     else:
         db = None

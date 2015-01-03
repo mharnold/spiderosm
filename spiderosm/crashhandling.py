@@ -16,7 +16,7 @@ def crash_info_excepthook(exctype, value, traceback):
 
   --- config.settings:
 %s
-  """, config.info, config.settings)
+  """, config.info_str(), config.settings_str())
 
     orig_excepthook(exctype, value, traceback)
 

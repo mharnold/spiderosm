@@ -10,7 +10,7 @@ import geofeatures
 import osmparser
 import pnwk
 
-osm_geojson_file_extension = '.osm.geojson'
+OSM_GEOJSON_FILE_EXTENSION = '.osm.geojson'
 
 class Way(object):
     def __init__(self, tags, node_ids):
@@ -155,11 +155,20 @@ class OSMData(object):
 		#print 'del node:',node_id
 
     # initialize from OSM input file, if given, else via overpass API
-    def __init__(self, file_name=None, clip_rect=None, target_proj=None):
+    def __init__(self, file_name=None, clip_rect=None, target_proj=None, srs=None):
         # if no file_name given we need to know what area to get via overpass 
         assert file_name or clip_rect
         self.clip_rect = clip_rect
 
+        self.srs = None
+        if srs:
+            self.srs = srs
+
+            if target_proj:
+                assert target_proj == srs.proj4text
+            else:
+                target_proj = srs.proj4text
+            
         self.proj=None
         if target_proj: self.proj = geo.Projection(target_proj)
 
@@ -209,17 +218,16 @@ class OSMData(object):
             features.append(self.way_geo(way_id))
         for node_id in self.nodes.keys():
             features.append(self.node_geo(node_id))
-        return geojson.FeatureCollection(features)
+        return geofeatures.geo_feature_collection(features, srs=self.srs)
 
     def write_geojson(self, name):
-        with open(name+osm_geojson_file_extension,'w') as f:
-            geojson.dump(self.__geo_interface__,f,indent=2)
+        geofeatures.write_geojson(self,name+OSM_GEOJSON_FILE_EXTENSION)
         
     # segments split at junctions
     # all attributes (keys) copied unless seg_props/jct_props specified.
     def create_path_network(self, name=None, seg_props=None, jct_props=None):
         if not name: name='osm'
-        nwk = pnwk.PNwk(name=name)
+        nwk = pnwk.PNwk(name=name, srs=self.srs)
         num_segs=0
 
         def add_node_tags(nwk, node_id, point, jct_props):

@@ -6,18 +6,12 @@ import json
 import os
 import sys
 
+import log
+
 info = {}
 settings = {}
 
-# location of spiderosm package dir
-# assume current directory if 'spiderosm' module not loaded
-try:
-    import spiderosm
-    settings['spiderosm_dir'] = spiderosm.__path__[0]
-except ImportError:
-    settings['spiderosm_dir'] = os.getcwd()
-
-def get_info():
+def _get_info():
     package_dir = os.path.dirname(__file__)
     info['package_dir'] = package_dir
 
@@ -30,15 +24,15 @@ def get_info():
     info['sys.platform'] = sys.platform
     info['os.name'] = os.name
 
-def default_settings():
+def _default_settings():
     # data for spiderosm tests
-    settings['spiderosm_test_data_dir'] = os.path.join(settings['spiderosm_dir'],'test_data')
+    settings['spiderosm_test_data_dir'] = os.path.join(info['package_dir'],'test_data')
 
     # enabling postgis or spatialite causes results to be written to these database by toplevels 
     # such as examples/match_berkeley.py and examples/match_portland.py.  
     # examples/test_spiderosm also will test enabled database interfaces
-    settings['postgis_enabled'] = False
-    settings['spatialite_enabled'] = False
+    settings['postgis_enabled'] = False 
+    settings['spatialite_enabled'] = False 
 
 def read_config_files(filenames=None,paths=None,quiet=False):
     if not filenames: filenames = ('.spiderosm.json', 'config.spiderosm.json')
@@ -54,16 +48,31 @@ def read_config_files(filenames=None,paths=None,quiet=False):
                     new = json.load(f)
                     settings.update(new)
 
+def info_str():
+    info_str=''
+    for key in sorted(info.keys()):
+        info_str += "\n    %s: %s" % (key,info[key])
+    return info_str
+
+def settings_str():
+    settings_str=''
+    for key in sorted(settings.keys()):
+        settings_str += "\n    %s: %s" % (key,settings[key])
+    return settings_str
+
+def log_settings():
+    log.info('config.info:%s', info_str())
+    log.info('config.settings:%s', settings_str())
 
 def test():
     fns = ( '.spiderosm.json', 'config.spiderosm.json' )
     paths = ( '~','.' )
-    #read_config_files(fns,paths)
+    #read_config_files(fns,)
     #print 'settings', settings
     print 'config PASS'
 
 #on load
-get_info()
-default_settings()
+_get_info()
+_default_settings()
 read_config_files()
 

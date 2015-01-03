@@ -201,4 +201,5 @@ def test():
     print "csvif PASS"
 
 #doit
-test()
+if __name__ == "__main__":
+    test()

@@ -312,4 +312,5 @@ def test():
     print 'dbinterface PASS'
 
 #doit
-test()
+if __name__ == "__main__":
+    test()

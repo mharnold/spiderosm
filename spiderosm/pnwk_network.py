@@ -12,12 +12,17 @@ import geojson
 import bins
 import cannames
 import geo 
+import geofeatures
 import pnwk_namespace
+import spatialref
 
 class PNwkNetwork(pnwk_namespace.PNwkNamespace):
     FILE_EXTENSION = '.pnwk.geojson'
 
-    def __init__(self,name=None,filename=None, units=None, quiet=False):
+    def __init__(self,name=None, filename=None, units=None, quiet=False, srs=None):
+
+        #spatial reference
+        self.srs = srs
 
         #network name
         if not name:
@@ -178,7 +183,7 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
         features = []
         for seg in self.segs.values(): features.append(seg.__geo_interface__)
         for jct in self.jcts.values(): features.append(jct.__geo_interface__)
-        return geojson.FeatureCollection(features)
+        return geofeatures.geo_feature_collection(features, srs=self.srs)
 
     def _parse_geojson(self,geo):
         #print 'DEBUG _parse_geojson geo:', geo
@@ -237,8 +242,7 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
 
     def write_geojson(self, name=None):
         if not name: name=self.name
-        with open(name+self.FILE_EXTENSION,'w') as f:
-            geojson.dump(self.__geo_interface__,f,indent=2,sort_keys=True)
+        geofeatures.write_geojson(self, name+self.FILE_EXTENSION, srs=self.srs)
 
     def get_bbox(self):
         bbox = geo.BBox() 
@@ -514,5 +518,6 @@ def test():
     print 'pnwk_network PASS'
 
 #doit
-test()
+if __name__ == "__main__":
+    test()
  

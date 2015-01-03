@@ -126,5 +126,5 @@ def test():
     print 'pnwk_score PASS'
 
 #doit
-test()
-
+if __name__ == "__main__":
+    test()
