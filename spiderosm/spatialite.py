@@ -11,13 +11,14 @@ import pyspatialite.dbapi2
 
 import config
 import dbinterface
+import log
 
 class Slite(dbinterface.DatabaseInterface):
     def __init__(self, dbName, srid=None, srs=None, verbose=True):
-        if not srid and srs:
-            srid = srs.postgis('postgis_srid')
         if not srid:
             srid = config.settings.get('spatialite_srid')
+        if not srid and srs:
+            srid = srs.spatialite_srid
         if not srid:
             srid = 4326   # longlat, ESPG:4326 
 
@@ -34,7 +35,7 @@ class Slite(dbinterface.DatabaseInterface):
     def _add_spatial_extension(self):
         if not 'spatial_ref_sys' in self.get_table_names():
             if self.verbose:
-                print 'SELECT spatialite.py:','Initializing spatialite metadata for %s' % self.db_name
+                log.info('Initializing spatialite metadata for %s', self.db_name)
             self.exec_sql('select InitSpatialMetadata()')
             self.commit()
         assert 'spatial_ref_sys' in self.get_table_names()

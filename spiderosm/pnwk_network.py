@@ -13,6 +13,7 @@ import bins
 import cannames
 import geo 
 import geofeatures
+import log
 import pnwk_namespace
 import spatialref
 
@@ -234,7 +235,7 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
                 self.add_seg(seg_id, from_jct_id, to_jct_id, points, names=names, qualifiedTags=tags)
 
     def read_geojson(self, filename, quiet=False): 
-        if not quiet: print 'Reading', filename
+        if not quiet: log.info('Reading PNwk %s', filename)
         with open(filename+self.FILE_EXTENSION,'r') as f:
             # needs geojson>1.0.7, for non-ascii property keys
             geo = geojson.load(f)

@@ -7,6 +7,7 @@ import geojson
 
 import geo
 import geofeatures
+import log
 import osmparser
 import pnwk
 
@@ -74,7 +75,7 @@ class OSMData(object):
 	    xml_format = (os.path.splitext(file_name)[1] == '.xml')
 				
         # first pass: nodes 
-        print 'Reading nodes from osm file:', file_name
+        log.info('Reading nodes from osm file: %s', file_name)
         if xml_format:
             p = osmparser.OSMParser(
                     all_nodes_callback=self._parse_nodes)
@@ -88,7 +89,7 @@ class OSMData(object):
 	    p.parse(file_name)
 
         # second pass: ways
-        print 'Reading ways from osm file:', file_name
+        log.info('Reading ways from osm file: %s', file_name)
         if xml_format:
             p = osmparser.OSMParser(
 	        ways_callback=self._parse_ways)
@@ -98,8 +99,7 @@ class OSMData(object):
 	        ways_callback=self._parse_ways)
             p.parse(file_name)
 				
-	print 'len(ways):', len(self.ways)
-	print 'len(nodes):', len(self.nodes)
+        log.info('%d ways, %d nodes', len(self.ways), len(self.nodes))
 
     # download OSM data via overpass API and parse it.
     def _import_and_parse_overpass_data(self):
@@ -123,12 +123,12 @@ class OSMData(object):
             new = []
             for ref in self.ways[way_id].node_ids:
                 if len(new) > 0 and ref == new[-1]:
-                    print 'DELETING REPEATED NODE REFERENCE %d from way %d' % (ref, way_id)
+                    log.warning('DELETING REPEATED NODE REFERENCE %d from way %d', ref, way_id)
                     num_removed += 1
                 else:
                     new.append(ref)
             self.ways[way_id].node_ids = new 
-        if num_removed>0: print 'REMOVED %d REPEATED NODE REFERENCES.' % num_removed
+        if num_removed>0: log.warning('REMOVED %d REPEATED NODE REFERENCES.', num_removed)
 
     # remove ways with less than two nodes left (after stutter removal.)
     def _remove_malformed_ways(self):
@@ -188,13 +188,12 @@ class OSMData(object):
 
 	# remove nodes that have neither tags nor are referenced by ways
 	self._vacuum_nodes()
-	print 'len(nodes) after vacuum:', len(self.nodes)
 
 	# count intersections
 	numi = 0
 	for id,node in self.nodes.items():
 	    if len(node.way_ids)>1: numi += 1
-	print 'intersections:', numi
+	log.info('%d nodes after cleanup, %d intersections.', len(self.nodes), numi)
 
     def node_geo(self,node_id):
         node = self.nodes[node_id]
@@ -283,7 +282,7 @@ class OSMData(object):
 
                         snode_id = node_id;
                         points = [node.coords]
-        print 'segments added:', num_segs
+        log.info('%d segments added to OSM PNwk.', num_segs)
         return nwk
 
 def test():

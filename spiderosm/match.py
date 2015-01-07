@@ -17,6 +17,7 @@ import config
 import csvif
 import geo
 import geofeatures
+import log
 import misc
 import osm
 import pnwk
@@ -40,11 +41,11 @@ class Match(object):
                 units = srs.units
 
             if proj4text:
-                assert sers.proj4text == proj4text
+                assert srs.proj4text == proj4text
             else:
                 proj4text = srs.proj4text
-            
-        # argument defaults 
+
+                # argument defaults 
         if not out_dir: out_dir = 'data'
         if not units: units = 'meters'
 
@@ -84,11 +85,20 @@ class Match(object):
         self._projection = None
         if not os.path.exists(out_dir): os.makedirs(out_dir)
 
+        if not self.proj4text:
+            log.warning("Unable to determine proj4text for Match object %s\n"
+                    "  (Needed to convert raw osm data to appropriate planar coordinates.)",
+                    self.project)
+
+        if not srs or not srs.url:
+            log.warning("No srs.url specified for Match object %s\n"
+                    "  (Needed for geojson file crs specifications.)", self.project)
+
     @property
     def proj4text(self):
         if not self._proj4text and self.city_shp:
             self._proj4text = spatialref.proj4_from_shapefile(self.city_shp)
-            print 'DEB derived proj4_text:', self.proj4text
+            #print 'DEB derived proj4_text:', self.proj4text
         return self._proj4text
 
     @proj4text.setter
@@ -97,7 +107,7 @@ class Match(object):
 
     @property
     def projection(self):
-        if not self._projection:
+        if not self._projection and self.proj4text:
             self._projection = geo.Projection(self.proj4text)
         return self._projection
 
@@ -105,45 +115,40 @@ class Match(object):
     def projection(self,value):
         self._projection = value
 
-    def log(self,msg):
-        now = str(datetime.datetime.now())
-        task = self.log_current_task
-        if not task: task=''
-
-        print "=====",now,self.project,task,msg
-
     def log_begin_task(self,msg):
         assert not self.log_current_task
         self.log_current_task = msg
-        self.log('...')
+        log.info('--- BEGINNING %s ...', self.log_current_task)
 
     def log_end_task(self):
         assert self.log_current_task
-        self.log('DONE.')
+        log.info('--- DONE %s.', self.log_current_task)
         self.log_current_task = None
         
     def fetch_city_data(self):
-        self.log_begin_task('fetching city data')
         if self.city_url:
             if self.city_zip:
                 download_filename = self.city_zip
             else:
                 download_filename = self.city_shp
+            self.log_begin_task('fetching city data')
             misc.update_file_from_url(download_filename, url=self.city_url)
+            self.log_end_task()
         if self.city_zip:
             misc.unzip(self.city_zip)
-        self.log_end_task()
 
     def fetch_osm_data(self):
+        if not self.osm_url: return
+        
         self.log_begin_task('fetching OSM data')
-        if self.osm_url:
-            misc.update_file_from_url(self.osm, url=self.osm_url)
+        misc.update_file_from_url(self.osm, url=self.osm_url)
         self.log_end_task()
 
     def fetch_base_data(self):
+        if not self.base_url: return
+
         self.log_begin_task('fetching OSM base data')
-        if self.base_url:
-            misc.update_file_from_url(self.base, url=self.base_url)
+        misc.update_file_from_url(self.base, url=self.base_url)
         self.log_end_task()
 
     def build_city_network(self):
@@ -171,7 +176,7 @@ class Match(object):
        
         city_nwk = pnwk.PNwk(name='city',filename=self.city_network,units=self.units, srs=self.srs)
         city_bbox = city_nwk.get_bbox()
-        print 'city_bbox:', city_bbox
+        log.info('city_bbox: %s', str(city_bbox))
 
         # buffer
         if self.units == 'meters':
@@ -179,7 +184,7 @@ class Match(object):
         else:
             assert self.units == 'feet'
             city_bbox_buffered = geo.buffer_box(city_bbox,300) #buffer by 100 yards
-        print 'bbox (city bbox with buffer):', city_bbox_buffered
+        log.info('bbox (city bbox with buffer): %s', str(city_bbox_buffered))
         self.bbox = city_bbox_buffered
 
         #city_bbox_buffered_geo = conf['project_projection'].project_box(city_bbox_buffered, rev=True)
@@ -193,7 +198,7 @@ class Match(object):
        
         osm_nwk = pnwk.PNwk(name='osm',filename=self.osm_network,units=self.units, srs=self.srs)
         osm_bbox = osm_nwk.get_bbox()
-        print 'osm_bbox:', osm_bbox
+        log.info('osm_bbox: %s', str(osm_bbox))
 
         # buffer
         if self.units == 'meters':
@@ -201,7 +206,7 @@ class Match(object):
         else:
             assert self.units == 'feet'
             osm_bbox_buffered = geo.buffer_box(osm_bbox,300) #buffer by 100 yards
-        print 'bbox (osm bbox with buffer):', osm_bbox_buffered
+        log.info('bbox (osm bbox with buffer): %s', str(osm_bbox_buffered))
         self.bbox = osm_bbox_buffered
 
         #city_bbox_buffered_geo = conf['project_projection'].project_box(city_bbox_buffered, rev=True)
@@ -290,7 +295,7 @@ class Match(object):
                 units = self.units,
                 srs=self.srs)
         except IOError:
-            self.log('Could not read osm_matched network, skipping mismatched_name_report')
+            log.error('Could not read osm_matched network, skipping mismatched_name_report')
             return
 
         self.log_begin_task('generating mismatched names report (.csv and .geojson)')
@@ -299,7 +304,6 @@ class Match(object):
         mismatches = geofeatures.filter_features(osm_matched, 
                 feature_func=mismatchFunc, 
                 geom_type='LineString')
-        print '%d (RAW) NAME MISMATCHES' % len(mismatches)
 
         # filter props down for webmap
         webmap_specs= [
@@ -321,7 +325,10 @@ class Match(object):
                 props[name] = cgi.escape(props[name])
 
         # unproject for web map use
-        self.projection.project_geo_features(webmap,rev=True)
+        if not self.projection:
+            log.error("No projection specified, could not convert to lon/lat for name_mismatches.geojson")
+        else:
+            self.projection.project_geo_features(webmap,rev=True)
         
         # write out geojson for webmap
         fname = os.path.join(self.out_dir,'name_mismatches.geojson')
@@ -337,7 +344,9 @@ class Match(object):
             unique.append(feature)
             pairs[pair] = True
         count = len(pairs)
-        print '%d UNIQUE NAME MISMATCHES' % count
+
+        log.info('name mismatches: %d raw, %d unique.', len(mismatches), count)
+
         def keyFunc(feature):
             p=feature['properties']
             return (p['osm_pnwk$name'], p['city_pnwk$name'])
@@ -352,8 +361,7 @@ class Match(object):
                 ('city', 'TEXT', 'city_pnwk$name'),
                 ('way', 'TEXT', 'report$wayURL'),
                 ('osmVerified', 'TEXT', 'report$osm_verified')
-                ]
-
+              ] 
         csvif.write(unique, os.path.join(self.out_dir,'name_mismatches.csv'), 
                 col_specs=csv_specs,
                 title=title)
@@ -376,7 +384,7 @@ class Match(object):
                 units = self.units,
                 srs = self.srs)
         except IOError:
-            self.log('Could not read osm_osm2base matched network, skipping fixed (OSM) names report')
+            log.error('Could not read osm_osm2base matched network, skipping fixed (OSM) names report')
             return
 
         self.log_begin_task('generating fixed (OSM) names report (.csv and .geojson)')
@@ -473,15 +481,12 @@ class Match(object):
         # gen fixed osm names report (.csv and .geojson files)
         self.gen_fixed_osm_names_report()
 
-def _test_ucb_sw1(out_dir,db=None):
+def _test_ucb_sw1(out_dir,db=None, srs=None):
     project = 'ucb_sw'
     test_data_dir = config.settings['spiderosm_test_data_dir']
     #print 'DEB test_data_dir:',test_data_dir
     in_dir = os.path.join(test_data_dir,'input',project)
 
-    berkeley_url = "http://www.spatialreference.org/ref/epsg/wgs-84-utm-zone-10n/"
-    srs=spatialref.SRS(url=berkeley_url)
-    
     m = Match( 
             project=project,
             srs=srs,
@@ -511,17 +516,21 @@ def _test_ucb_sw1(out_dir,db=None):
 
 def test_ucb_sw(out_dir=None):
 
+    # srs
+    berkeley_url = "http://www.spatialreference.org/ref/epsg/wgs-84-utm-zone-10n/"
+    srs=spatialref.SRS(url=berkeley_url)
+
     # if out_dir specified, use it, and keep it.
     if out_dir:
         if os.path.exists(out_dir): shutil.rmtree(out_dir)
-        _test_ucb_sw1(out_dir=out_dir)
+        _test_ucb_sw1(out_dir=out_dir,srs=srs)
         return
 
     tmp_dir = tempfile.gettempdir()
     out_dir = os.path.join(tmp_dir,'ucb_sw')
     if os.path.exists(out_dir): shutil.rmtree(out_dir)
     try:
-        _test_ucb_sw1(out_dir=out_dir)
+        _test_ucb_sw1(out_dir=out_dir,srs=srs)
     finally:
         if os.path.exists(out_dir): shutil.rmtree(out_dir)
 
@@ -531,19 +540,30 @@ def test(out_dir=None):
 
 def test_sqlite():
     print 'DEB match with sqlite'
-    import spiderosm.spatialite
-    sqlite_fn = 'data/test.sqlite'
-    db = spiderosm.spatialite.Slite(sqlite_fn)
-    _test_ucb_sw1(out_dir='data',db=db)
+
+    import spatialite
+    out_dir = 'data'
+    sqlite_fn = os.path.join(out_dir,'test.sqlite')
+    if not os.path.exists(out_dir): os.makedirs(out_dir)
+    if os.path.isfile(sqlite_fn): os.remove(sqlite_fn)
+
+    # srs
+    berkeley_url = "http://www.spatialreference.org/ref/epsg/wgs-84-utm-zone-10n/"
+    srs=spatialref.SRS(url=berkeley_url)
+
+    os.path
+
+    db = spatialite.Slite(sqlite_fn,srs=srs)
+    _test_ucb_sw1(out_dir=out_dir,db=db,srs=srs)
 
 def test_postgis():
     print 'DEB match with postgis'
 
 def test_postgis():
     print 'DEB match with postgis'
-    import spiderosm.postgis
+    import postgis
     db_name = config.settings.get('postgis_dbname','spiderosm_test')
-    db = spiderosm.postgis.PGIS(db_name)
+    db = postgis.PGIS(db_name)
     _test_ucb_sw1(out_dir='data',db=db)
 
 def test_derive_proj4text():
@@ -586,9 +606,10 @@ def test_derive_proj4text():
    
 #doit
 if __name__ == '__main__':
-    test()
+    #test()
     #test(out_dir='out')
-    #test_sqlite()
+    test_sqlite()
     #test_postgis()
     #test_derive_proj4text()
+   
 

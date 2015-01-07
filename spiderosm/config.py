@@ -43,7 +43,7 @@ def read_config_files(filenames=None,paths=None,quiet=False):
         for fn in filenames:
             fullpath = os.path.join(path,fn)
             if os.path.exists(fullpath):
-                print 'Reading %s' % fullpath
+                log.info('Reading %s', fullpath)
                 with open(fullpath, 'r') as f:
                     new = json.load(f)
                     settings.update(new)
@@ -73,6 +73,7 @@ def test():
 
 #on load
 _get_info()
+log.config(version=info['version'])
 _default_settings()
 read_config_files()
 

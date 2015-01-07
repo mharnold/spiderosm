@@ -4,9 +4,11 @@ import numbers
 import geojson
 
 import geo
+import geofeatures
 
 # auto gen colspecs from geo features
 def gen(geo, geometry_type=None):
+    features=geofeatures.geo_features(geo)
     geo_type_table = {'LineString':'LINESTRING', 'Point':'POINT'}
     type_name = { numbers.Integral:'INT', numbers.Real:'FLOAT', basestring:'TEXT'}
     type_rank = { numbers.Integral:1, numbers.Real:2, basestring:3 }
@@ -20,10 +22,9 @@ def gen(geo, geometry_type=None):
                     specs[prop] = 'BIGINT'
                     break
 
-    if not geometry_type: geometry_type = geo['features'][0]['geometry']['type']
+    if not geometry_type: geometry_type = features[0]['geometry']['type']
     specs = {}
     specs_rank = {}
-    features = geo['features']
 
     # auto create 'col types' based on python types of values
     # if attribute values not of same type, promote based on type_rank

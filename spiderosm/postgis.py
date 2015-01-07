@@ -9,6 +9,7 @@ from psycopg2.extras import DictCursor
 
 import config
 import dbinterface
+import log
 
 class PGIS(dbinterface.DatabaseInterface):
     def __init__(self, dbName=None, user=None, password=None, host=None, port=None, srid=None, srs=None, verbose=True):
@@ -20,10 +21,10 @@ class PGIS(dbinterface.DatabaseInterface):
 
         if not dbName: dbName = conf('postgis_dbname')
         assert dbName
-        if not srid and srs:
-            srid = srs.postgis('postgis_srid')
         if not srid:
-            srid = conf('postgis_srid')
+            srid = config.settings.get('postgis_srid')
+        if not srid and srs:
+            srid = srs.postgis_srid
         if not srid:
             srid = 4326   # longlat, ESPG:4326 
 
@@ -45,7 +46,7 @@ class PGIS(dbinterface.DatabaseInterface):
     def _add_spatial_extension(self):
         if not 'spatial_ref_sys' in self.get_table_names():
             if self.verbose: 
-                print 'pgis.py:','Adding postgis extension to postgres database %s' % self.db_name
+                log.info('Adding postgis extension to postgres database %s',self.db_name)
             self.exec_sql('create extension postgis;')
             self.commit()
         assert 'spatial_ref_sys' in self.get_table_names()

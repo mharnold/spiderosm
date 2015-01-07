@@ -8,6 +8,11 @@ import sys
 import time
 import zipfile
 
+def percent(num,of):
+    '''compute percent, avoiding divide by zero, round to integer'''
+    if of==0: return 0
+    return round((100.0*num)/of)
+
 def module_loaded_q(mod_name):
     return mod_name in sys.modules.keys()
 
@@ -62,6 +67,10 @@ def unzip(Filename):
             os.makedirs(dirname)
         zfile.extract(name, dirname)
 
+def _test_percent():
+    assert percent(5,10)==50.0
+    assert percent(5,0)==0.0
+
 def _test_dates():
     print 'date_ymd:', date_ymd()
     print 'date_ymdhms:', date_ymdhms()
@@ -82,6 +91,7 @@ def _test_module_loaded_q():
 
 def test():
     _test_module_loaded_q()
+    _test_percent()
     #_test_dates()
     #_test_print_now()
     print 'misc PASS'

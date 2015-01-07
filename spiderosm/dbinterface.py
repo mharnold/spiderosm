@@ -2,7 +2,8 @@ import geojson
 
 import colspecs
 import geo
-
+import geofeatures
+import log
 
 class DatabaseInterface(object):
     ''' Base class for postgis, and spatiallite database interfaces'''
@@ -12,16 +13,16 @@ class DatabaseInterface(object):
         self.srid = srid
         self.srs = srs
         self.verbose = verbose
-        if self.verbose: print 'Connecting to database %s' % db_name
+        if self.verbose: log.info('Connecting to database %s',db_name)
         
         (self.con, self.cur) = self._connect()
         self._add_spatial_extension()
 
     def _connect(self):
-        print 'DatabaseInterface._connect() stub: specialize for postgis, spatialite etc.'
+        log.error('DatabaseInterface._connect() stub: specialize for postgis, spatialite etc.')
 
     def _add_spatial_extension(self):
-        print 'DatabaseInterface._add_spatial_extension() stub: specialize for postgis, spatialite etc.'
+        log.error('DatabaseInterface._add_spatial_extension() stub: specialize for postgis, spatialite etc.')
 
     # '%s' in pycopg2, '?' in pyspatialite
     _interpolation_ref = 'string used to reference values to be interpolated into sql string by cursor' 
@@ -165,7 +166,7 @@ class DatabaseInterface(object):
                         }
 
         # and execute sql
-        #print 'sql_template:', sql_template
+        #print 'DEB sql_template:', sql_template
         self.exec_sql(sql_template,parms)
 
     def write_table(self, table, col_specs, rows):
@@ -175,14 +176,19 @@ class DatabaseInterface(object):
             self.write_row(table, col_specs, row)
             
     def write_geo(self, geo, table_name, srid=None, geometry_type=None, col_specs=None):
-        try: geo = geo.__geo_interface__
-        except AttributeError: pass
-        if not geometry_type: geometry_type = geo['features'][0]['geometry']['type']
-        if not col_specs: col_specs = colspecs.gen(geo, geometry_type)
+        features = geofeatures.geo_features(geo)
+
+        if len(features)==0 and not col_specs:
+            log.warning('Could not write db table %s: zero length and no explicit col_specs', table_name)
+            return
+
+        if not geometry_type: geometry_type = features[0]['geometry']['type']
+        if not col_specs: 
+            col_specs = colspecs.gen(geo, geometry_type)
 
         #filter features for correct geometry_type
         rows = []
-        for feature in geo['features']:
+        for feature in features:
             if feature['geometry']['type'] != geometry_type: continue
             row = {}
             row.update(feature['properties'])
@@ -193,6 +199,7 @@ class DatabaseInterface(object):
         # write the table
         self.write_table(table_name, col_specs, rows)
         self.commit()
+
 
     def write_pnwk(self, pnwk, name=None):
         if not name: name = pnwk.name
@@ -213,13 +220,13 @@ class DatabaseInterface(object):
                 if e[col] != srs_info[col]:
                     match = False
             if not match:
-                msg = 'spatial ref entry for srid=%d already exists and differs!' % srs_info['srid']
-                print 'dbinterface.py WARNING:', msg
+                log.warning('spatial ref entry for srid=%d already exists and differs!',
+                        srs_info['srid'])
         else:
             assert len(existing) == 0
-            print 'dbinterface.py:', 'Adding spatial reference system (srid=%d) to database %s' % (
-                srs_info['srid'],
-                db_name)
+            log.info('dbinterface.py:', 'Adding spatial reference system (srid=%d) to database %s', 
+                    srs_info['srid'],
+                    db_name)
             colspecs = [ (col,'generic') for col in ('srid','auth_name','auth_srid','proj4text','srtext')]
             write_row('spatial_ref_sys', colspecs, srs_info)
             commit()

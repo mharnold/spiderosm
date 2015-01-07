@@ -13,7 +13,5 @@ AUTHOR_EMAIL = config.info['author_email']
 LICENSE = config.info['license']
 HOMEPAGE = config.info['homepage']
 
-log.config(version=__version__)
 crashhandling.init()
-
 config.log_settings()

@@ -4,6 +4,8 @@ Path Network - Match Jcts.
 import pdb
 
 import geo 
+import log
+import misc
 import pnwk_score
 
 class PNwkMatchJcts(pnwk_score.PNwkScore):
@@ -30,6 +32,8 @@ class PNwkMatchJcts(pnwk_score.PNwkScore):
             other_jct.match = jct
 
     def match_stats(self, name=None, quiet=False):
+        percent = misc.percent
+
         if not name: name = self.name
         num_segs = len(self.segs)
         num_jcts = len(self.jcts)
@@ -42,23 +46,24 @@ class PNwkMatchJcts(pnwk_score.PNwkScore):
             if seg.match != None: 
                 num_segs_matched += 1
                 miles_matched += seg.length(units="miles")
-        percent_segs_matched= (100*num_segs_matched)/num_segs
-        percent_miles_matched = round(100*miles_matched/miles)
+        percent_segs_matched= percent(num_segs_matched,num_segs)
+        percent_miles_matched = percent(miles_matched,miles)
 
         num_jcts_matched = 0
         for jct in self.jcts.values():
             if jct.match != None: num_jcts_matched += 1
-        percent_jcts_matched= (100*num_jcts_matched)/num_jcts
+        percent_jcts_matched= percent(num_jcts_matched,num_jcts)
         if not quiet:
-            print '%s: jcts: %d/%d (%d%%) matched. segs: %d/%d (%d%%) matched.' % (
+            line1 = '%s: jcts: %d/%d (%d%%) matched. segs: %d/%d (%d%%) matched.' % (
                 name,
-                num_jcts_matched, num_jcts, (100*num_jcts_matched)/num_jcts,
-                num_segs_matched, num_segs, (100*num_segs_matched)/num_segs)
-            print '%s: miles: %d/%d (%d%%) matched.' % (
+                num_jcts_matched, num_jcts, percent_jcts_matched,
+                num_segs_matched, num_segs, percent_segs_matched)
+            line2 = '%s: miles: %d/%d (%d%%) matched.' % (
                     name,
                     miles_matched,
                     miles,
                     percent_miles_matched)
+            log.info('%s\n  %s', line1, line2)
 
         return {'num_jcts_matched':num_jcts_matched, 
                 'num_jcts':num_jcts,
@@ -121,11 +126,19 @@ test_points = [(0,0), (1000,1000)]
 test_points2 = [(5,0), (1020,1000)]
 def test():
     g = test_setup_g()
+
     n = test_setup_n()
     g.jct_match_pass(n, 40, [(g.JctMatchSet.jct_filter_max_d, (10,100))])
     stats = g.match_stats(quiet=True)
     #print 'stats', stats
     assert stats['num_jcts_matched'] == 1
+
+    # don't choke on no matches.
+    empty = PNwkMatchJcts('empty')
+    stats=empty.match_stats(quiet=True)
+    #print 'stats', stats
+    assert stats['num_jcts_matched'] == 0
+
     print 'pnwk_matchjcts PASS'
 
 #doit

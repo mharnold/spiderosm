@@ -4,11 +4,12 @@ Street Centerline Data to Path Network conversion
 import pdb
 
 import geo
+import log
 import pnwk
 
 ''' features in python geo interface format (geojson) '''
 def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,quiet=False, clip_rect=None):
-    if not quiet: print 'num centerline features:', len(features)
+    if not quiet: log.info('%d centerline features.', len(features))
     #print 'DEBUG random city feature:',features[10]
 
     city_street_network = pnwk.PNwk(name=name)
@@ -67,12 +68,15 @@ def make_pnwk(features, props=None, namesFunc=None, filter_func=None, name=None,
                     )
    
     if len(skipped_features) > 0  and not quiet:
-        print '%d features skipped.' % len(skipped_features)
-        print 'first skipped feature:',feature
+        log.warning('%d features skipped.\n'
+                '  first skipped feature: %s',
+                len(skipped_features), 
+                str(feature))
 
     if max_input_dim > 2 and not quiet:
-        print 'WARNING: Input coordinates up to %d dimensional.' % max_input_dim
-        print 'Retaining only first 2 dimensions.'
+        info.warning('Input coordinates up to %d dimensional.\n' 
+                '  Retaining only first 2 dimensions.',
+                max_input_dim)
 
     return city_street_network
 
