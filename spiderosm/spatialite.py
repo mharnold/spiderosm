@@ -12,6 +12,7 @@ import pyspatialite.dbapi2
 import config
 import dbinterface
 import log
+import spatialref
 
 class Slite(dbinterface.DatabaseInterface):
     def __init__(self, dbName, srid=None, srs=None, verbose=True):
@@ -23,7 +24,7 @@ class Slite(dbinterface.DatabaseInterface):
             srid = 4326   # longlat, ESPG:4326 
 
         if not srid: srid = config.settings.get('spatialite_srid')
-        super(Slite,self).__init__(dbName, srid=srid, verbose=verbose)        
+        super(Slite,self).__init__(dbName, srid=srid, srs=srs, verbose=verbose)        
 
     # establish database connection 
     def _connect(self):
@@ -57,6 +58,22 @@ def dict_factory(cursor, row):
         d[col[0]] = row[idx]
     return d
 
+def testx(fname='out.sqlite'):
+    print 'DEB spatialite testx() hack.'
+    if os.path.exists(fname): os.remove(fname)
+
+    # srs
+    berkeley_url = "http://www.spatialreference.org/ref/epsg/wgs-84-utm-zone-10n/"
+    srs=spatialref.SRS(url=berkeley_url)
+    print 'srs:', srs
+
+    db = Slite(fname, verbose=False, srs=srs)
+    print 'db.srid:', db.srid
+    print 'db.srs:', db.srs
+    print 'DEB before add'
+    db.add_spatial_ref_sys()
+    print 'DEB after add'
+
 def test():
     with tempfile.NamedTemporaryFile(suffix='.sqlite', delete=False) as temp:
         fname = temp.name
@@ -69,5 +86,5 @@ def test():
     print "spatialite PASS"
 
 if __name__ == "__main__":
-    # test is slow for some reason, so only run when invoked as main.
     test()
+    testx()

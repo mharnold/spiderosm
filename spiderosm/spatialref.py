@@ -35,7 +35,8 @@ import config
 import log
 
 # by default db srid's derived from auth_srid by adding this offset
-DB_SRID_OFFSET = pow(10,7)
+# there is a postgis constraint that checks that srid is < 998999
+DB_SRID_OFFSET = 800000
 
 class SRS(object):
     def __init__(self,
@@ -91,8 +92,8 @@ class SRS(object):
 
         # set db srids from auth_srid
         if self.auth_srid:
-            if not self.spatialite_srid: self.spatialite_srid = self.auth_srid + DB_SRID_OFFSET
-            if not self.postgis_srid: self.postgis_srid = self.auth_srid + DB_SRID_OFFSET
+            if not self.spatialite_srid: self.spatialite_srid = self.auth_srid%100000 + DB_SRID_OFFSET
+            if not self.postgis_srid: self.postgis_srid = self.auth_srid%100000 + DB_SRID_OFFSET
 
         # default to meters
         if not self.units:

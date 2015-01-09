@@ -17,6 +17,7 @@ class DatabaseInterface(object):
         
         (self.con, self.cur) = self._connect()
         self._add_spatial_extension()
+        self.add_spatial_ref_sys()
 
     def _connect(self):
         log.error('DatabaseInterface._connect() stub: specialize for postgis, spatialite etc.')
@@ -206,7 +207,20 @@ class DatabaseInterface(object):
         self.write_geo(pnwk, name+'_pnwk_segs', geometry_type='LineString')
         self.write_geo(pnwk, name+'_pnwk_jcts', geometry_type='Point')
 
-    def add_spatial_ref_sys(self, srs_info):
+    def add_spatial_ref_sys(self, srid=None, srs=None):
+        if not srid: srid=self.srid
+        if not srs: srs=self.srs
+        if srs:
+            srs_info = dict(
+                    srid=srid,
+                    auth_name=srs.auth_name,
+                    auth_srid=srs.auth_srid,
+                    proj4text=srs.proj4text,
+                    srtext=srs.srtext
+                    )
+        else:
+            srs_info = dict(srid=srid)
+
         existing = self.select(
             '*',
             'spatial_ref_sys',
@@ -214,22 +228,33 @@ class DatabaseInterface(object):
             )
         assert len(existing) <2
         if len(existing) == 1:
+            # exact match requirement too stringent.
+            '''
             e = existing[0]
             match = True
             for col in e.keys():
-                if e[col] != srs_info[col]:
+                if srs_info.get(col) and (e[col] != srs_info[col]):
                     match = False
             if not match:
-                log.warning('spatial ref entry for srid=%d already exists and differs!',
+                log.warning('Spatial ref entry for srid=%d already exists and differs.',
                         srs_info['srid'])
+            '''
         else:
             assert len(existing) == 0
-            log.info('dbinterface.py:', 'Adding spatial reference system (srid=%d) to database %s', 
-                    srs_info['srid'],
-                    db_name)
-            colspecs = [ (col,'generic') for col in ('srid','auth_name','auth_srid','proj4text','srtext')]
-            write_row('spatial_ref_sys', colspecs, srs_info)
-            commit()
+            have_info = srs and srs.auth_name and srs.auth_srid and srs.proj4text and srs.srtext
+            if not have_info:
+                log.error('Can not add spatial reference system (srid=%d) to database %s:\n' 
+                        'insufficient srs info: %s',
+                        srs_info['srid'],
+                        self.db_name,
+                        str(srs_info))
+            if have_info:
+                log.info('Adding spatial reference system (srid=%d) to database %s', 
+                        srs_info['srid'],
+                        self.db_name)
+                colspecs = [ (col,'generic') for col in ('srid','auth_name','auth_srid','proj4text','srtext')]
+                self.write_row('spatial_ref_sys', colspecs, srs_info)
+                self.commit()
 
     def test(self,verbose=True):
         PREFIX = 'spiderosm_test_'

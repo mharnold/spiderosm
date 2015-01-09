@@ -70,6 +70,7 @@ def test():
     # requires preexisting spaitially enabled database:
     # %createdb <dbname>
     db_name = config.settings.get('postgis_dbname','spiderosm_test')
+    if not db_name: db_name = 'spiderosm_test'
     pgis = PGIS(db_name, srid=4326, verbose=False)
    
     # run tests
@@ -78,5 +79,6 @@ def test():
     print "postgis PASS"
 
 # on module load
-test()
+if __name__ == "__main__":
+    test()
 
