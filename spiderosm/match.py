@@ -93,8 +93,8 @@ class Match(object):
         self.city_network = city_network
 
         # osm paths
-        self.osm_url = None
-        self.osm = None
+        self.osm_url = osm_url
+        self.osm = osm
         self.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
 
         # base paths (osm base version)
@@ -500,18 +500,18 @@ def _test_ucb_sw1(out_dir,db=None, srs=None):
             project=project,
             srs=srs,
             out_dir=out_dir,
-            db=db)
+            db=db,
 
-    #CITY DATA
-    m.city_geojson = os.path.join(in_dir,'streets.geojson')
-    m.centerline_to_pnwk = centerline.berkeley_pnwk
-    m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
+            #CITY DATA
+            city_geojson = os.path.join(in_dir,'streets.geojson'),
+            centerline_to_pnwk = centerline.berkeley_pnwk,
+            city_network = os.path.join(out_dir,'city'), # .pnwk.geojson 
+            
+            #OSM DATA
+            osm = os.path.join(in_dir,'ucb_sw.osm.xml'),
+            osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
+            )
 
-    #OSM DATA
-    m.osm = os.path.join(in_dir,'ucb_sw.osm.xml')
-    m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
-
-    # do the name crosscheck (results written to out_dir)
     m.names_cross_check()
 
     # check results
@@ -615,9 +615,9 @@ def test_derive_proj4text():
    
 #doit
 if __name__ == '__main__':
-    #test()
+    test()
     #test(out_dir='out')
-    test_sqlite()
+    #test_sqlite()
     #test_postgis()
     #test_derive_proj4text()
    

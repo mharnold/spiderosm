@@ -49,11 +49,13 @@ def write_geojson(features, outFileName, srs=None):
     with open(outFileName,'w') as f:
         geojson.dump(fc,f,indent=2)
  
-def filter_features(features, feature_func=None, geom_type=None, col_specs=None):
+def filter_features(features, feature_func=None, geom_type=None, col_specs=None, clip_rect=None):
     features = geo_features(features)
 
     new_features = []
     for feature in features:
+        if clip_rect and not coordinates_intersect_rect_q(feature['geometry']['coordinates'], 
+                clip_rect): continue
         if geom_type and feature['geometry']['type'] != geom_type: continue
         new_feature = copy.deepcopy(feature)
         if feature_func:
@@ -216,6 +218,11 @@ def test():
     out = filter_features(features, ffunc, geom_type='LineString', col_specs=specs)
     assert len(out) == 1
     assert out[0]['properties']['name'] == 'Ms. TRAIL'
+
+    # clip_rect
+    out = filter_features(features, clip_rect= (0,0,15,15))
+    assert len(out)==1
+    assert out[0]['properties']['OBJECTID'] == 1
 
     # bbox
     assert bbox(features) == (10, 11, 200, 210)
