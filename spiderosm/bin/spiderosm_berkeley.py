@@ -50,27 +50,28 @@ def _match_city():
             project=project,
             srs=srs,
             db=db,
-            out_dir=out_dir)
+            out_dir=out_dir,
 
-    #CITY DATA (jurisdictional centerline data)
-    # source: http://www.ci.berkeley.ca.us/datacatalog/
-    m.city_url = 'http://www.ci.berkeley.ca.us/uploadedFiles/IT/GIS/streets.zip'
-    m.city_zip = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.zip')
-    m.city_shp = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.shp')
-    m.city_geojson = os.path.join(out_dir,'streets.geojson')
-    #m.centerline_to_pnwk = spiderosm.centerline.berkeley_pnwk
-    m.centerline_to_pnwk = _city_pnwk
-    m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
+            #CITY DATA (jurisdictional centerline data)
+            # source: http://www.ci.berkeley.ca.us/datacatalog/
+            city_url = 'http://www.ci.berkeley.ca.us/uploadedFiles/IT/GIS/streets.zip',
+            city_zip = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.zip'),
+            city_shp = os.path.join(gis_data_dir,'centerline','berkeley','streets','streets.shp'),
+            city_geojson = os.path.join(out_dir,'streets.geojson'),
+            #centerline_to_pnwk = spiderosm.centerline.berkeley_pnwk
+            centerline_to_pnwk = _city_pnwk,
+            city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
-    #OSM DATA (downloaded via overpass API by default)
-    #geofabrik extracts updated daily
-    #m.osm_url = 'http://download.geofabrik.de/north-america/us/california-latest.osm.pbf'
-    #m.osm = os.path.join(gis_data_dir,'osm','geofabrik.de','california-latest.osm.pbf')
-    #m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
+            #OSM DATA (downloaded via overpass API by default)
+            #geofabrik extracts updated daily
+            #osm_url = 'http://download.geofabrik.de/north-america/us/california-latest.osm.pbf',
+            #osm = os.path.join(gis_data_dir,'osm','geofabrik.de','california-latest.osm.pbf'),
+            #osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson,
 
-    #OSM BASE (before name fixes)
-    #m.base = os.path.join(gis_data_dir,'osm','geofabrik.de','california-140401.osm.pbf')
-    #m.base_network = os.path.join(out_dir,'base') # .pnwk.geojson
+            #OSM BASE (before name fixes)
+            #base = os.path.join(gis_data_dir,'osm','geofabrik.de','california-140401.osm.pbf'),
+            #base_network = os.path.join(out_dir,'base') # .pnwk.geojson
+            )
 
     # do the name crosscheck (results written to out_dir)
     m.names_cross_check()

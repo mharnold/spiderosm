@@ -33,7 +33,6 @@ def _match_city():
             units='feet',
             # proj4text missing at url as of 12/27/2014
             proj4text = '+proj=lcc +lat_1=44.33333333333334 +lat_2=46 +lat_0=43.66666666666666 +lon_0=-120.5 +x_0=2500000 +y_0=0 +datum=NAD83 +units=ft +no_defs',
-
             spatialite_srid=spiderosm.config.settings.get('spatialite_srid'),
             postgis_srid=spiderosm.config.settings.get('postgis_srid')
             )
@@ -61,28 +60,29 @@ def _match_city():
             srs=srs,
             bbox=bbox,
             db=db,
-            out_dir=out_dir)
+            out_dir=out_dir,
 
-    # CITY DATA (RLIS street data)
-    # source: http://rlisdiscovery.oregonmetro.gov/?resourceID=99
-    # (No automatic download: go to site manually and download.)
-    m.city_shp= os.path.join(gis_data_dir,'centerline','rlis','streets','streets.shp')
-    m.city_geojson = os.path.join(out_dir,'streets.geojson')
-    m.centerline_to_pnwk = spiderosm.centerline.rlis_pnwk
-    #UNCOMMENT NEXT LINE TO USE CUSTOMIZED centerline -> pnwk CODE: FURTHER DOWN IN THIS FILE. 
-    #m.centerline_to_pnwk = _city_pnwk
-    #m.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
+            # CITY DATA (RLIS street data)
+            # source: http://rlisdiscovery.oregonmetro.gov/?resourceID=99
+            # (No automatic download: go to site manually and download.)
+            city_shp= os.path.join(gis_data_dir,'centerline','rlis','streets','streets.shp'),
+            city_geojson = os.path.join(out_dir,'streets.geojson'),
+            centerline_to_pnwk = spiderosm.centerline.rlis_pnwk
+            #UNCOMMENT NEXT LINE TO USE CUSTOMIZED centerline -> pnwk CODE: FURTHER DOWN IN THIS FILE. 
+            #centerline_to_pnwk = _city_pnwk,
+            #city_network = os.path.join(out_dir,'city'), # .pnwk.geojson
 
-    #OSM DATA (downloaded via overpass API by default)
-    #geofabrik extracts updated daily
-    #m.osm_url = 'http://download.geofabrik.de/north-america/us/oregon-latest.osm.pbf'
-    #m.osm = os.path.join(gis_data_dir, 'osm', 'geofabrik.de', 'oregon-latest.osm.pbf')
-    #m.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
+            #OSM DATA (downloaded via overpass API by default)
+            #geofabrik extracts updated daily
+            #osm_url = 'http://download.geofabrik.de/north-america/us/oregon-latest.osm.pbf',
+            #osm = os.path.join(gis_data_dir, 'osm', 'geofabrik.de', 'oregon-latest.osm.pbf'),
+            #osm_network = os.path.join(out_dir,'osm'), # .pnwk.geojson
 
-    #OSM BASE (before name fixes)
-    #m.base_url = 'http://download.geofabrik.de/north-america/us/oregon-140901.osm.pbf'
-    #m.base = os.path.join(gis_data_dir,'osm','geofabrik.de','oregon-140901.osm.pbf')
-    #m.base_network = os.path.join(out_dir,'base') # .pnwk.geojson
+            #OSM BASE (before name fixes)
+            #base_url = 'http://download.geofabrik.de/north-america/us/oregon-140901.osm.pbf',
+            #base = os.path.join(gis_data_dir,'osm','geofabrik.de','oregon-140901.osm.pbf'),
+            #base_network = os.path.join(out_dir,'base') # .pnwk.geojson
+            )
 
     # do the name crosscheck (results written to out_dir)
     m.names_cross_check()

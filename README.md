@@ -95,6 +95,7 @@ Here is an example config.spiderosm.json file:
         "gis_data_dir": "/Users/me/GIS/data",
         "postgis_enabled" : true,
         "postgis_dbname" : "pdx",
+        "postgis_srid" : 100001,
         "spatialite_enabled" : false 
     }
 
@@ -106,7 +107,7 @@ If *postgis_enabled* is set you will need the python package psycopg2:
 % pip install --upgrade psycopg2
 ```
 
-In addition to *postgis_enabled*, the following configuration options are supported: *postgis_dbname*, *postgis_user*, 
+In addition to *postgis_enabled*, the following configuration options are supported: *postgis_srid*, *postgis_dbname*, *postgis_user*, 
 *postgis_password*, *postgis_host*, and *postgis_port*.
 
 
@@ -116,7 +117,10 @@ If *spatialite_enabled* (see 'Config Files' above) is set you will need the pyth
 
 ```
 % pip install --upgrade pyspatialite
+
 ```
+
+In addition to *spatiallite_enabled*, the *spatialite_srid* configuration option is supported.
 
 ### Imposm.parser and .osm.pbf
 
@@ -138,6 +142,16 @@ can be installed with pip:
 
 ```
 % pip install --upgrade imposm.parser
+```
+
+### Osr 
+
+The Osr python package allows spiderosm to derive proj4text format projection information from the WKT (.prj file) shapefile information.  (Spiderosm uses proj4 to project OSM data to an appropriate planar coordinate system.)
+
+The osr python package can be installed via pip:
+
+```
+% pip GDAL
 ```
 
 ## Examples
@@ -181,16 +195,37 @@ OSM download.  If Postgis or Spatialite is enabled runtime will go up.
 
 ## Customization
 
-Copy the `spiderosm/bin/spiderosm\_berkeley.py` top-level (or
-`spiderosm\_portland.py`) and modify to suit your needs.  
+Copy the `spiderosm/bin/spiderosm_berkeley.py` top-level (or
+`spiderosm_portland.py`) and modify to suit your needs.  
 
 Customization includes specifying such things as input files, an appropriate local projection (spatial reference system) and region bounds.  In addition, you will want to customize the `_city_pnwk()` function in the sample top-level to correspond to your particular jurisdicitional 'centerline' data.  This includes specifying how to extract street names form the jurisdicitional attributes, and possible specifying a filter function to exclude extraneous features (e.g. railroad or powerlines.)
 
-### Spatial Reference System / Projection
+### Spatial Reference Systems
 
-I have personally found the specification of Spatial Reference Systems / Projections to be kind of a mess, and a big time sink when coding for GIS projects.  At a minimum there seems to be a learning-curve involved!  I am attempting to make this as straight-forward and automatic, i.e., painless, as possible in spiderosm. But this is still a work in progress!
+Input files should be in a locally appropriate
+projection.  OSM data is translated from latlon to the local projection by the
+code in osm.py  
 
-Geographic coordinates are not appropriate for matching path networks, rather planar coordinates in units of "meters" or "feet" are required.  If the units are in "feet" this must be specified explicitly when initializing a Match object or PNwk (Path Network.)  Spiderosm uses proj4.  Typically projections are specified via the proj4text argument to Match() or PNwk(). 
+Several types of spatial reference system information are used in spiderosm:  
+**spatialreference.org URL** - This is the preferred method for specifying spatial reference systems to spiderosm. It allows the automatic download of much of the information listed below.  The spatialreference.org URL is also used for the CRS specification in planar (not latlon) geojson output files.  
+**proj4text** - Used for conversion of OSM data to appropriate planar coordiantes.  Also used when adding spatial reference system definitions to postgis and spatialite databases.  
+**WKT (ESRI .prj files)** - Used for adding spatial reference system definitions to postgis and spatialite databases.  If the osr package ('%pip GDAL') is installed, spiderosm can derive proj4text automatically from this.  
+**auth\_name, auth\_srid (e.g. EPSG:32610)** -  Used for adding spatial reference system definitions to postgis and spatialite databases.  
+**units** - Planar coordinates need to be in units of feet or meters.  Meters are the default, units of feet need to be specified explicitly.  
+**postgis\_srid, spatialite\_srid** - srid to use in output to spatially enabled databases.
+
+Unfortunately, this can get a little messy.  Here is an example spiderosm spatial reference system specification from `spiderosm/bin/spiderosm_portland.py`:
+
+    # spatial reference system
+    #NAD_1983_HARN_StatePlane_Oregon_North_FIPS_3601_Feet_Intl
+    srs = spiderosm.spatialref.SRS(
+            url="http://www.spatialreference.org/ref/sr-org/6856/",
+            units='feet',
+            # proj4text missing at url as of 12/27/2014
+            proj4text = '+proj=lcc +lat_1=44.33333333333334 +lat_2=46 +lat_0=43.66666666666666 +lon_0=-120.5 +x_0=2500000 +y_0=0 +datum=NAD83 +units=ft +no_defs',
+            spatialite_srid=spiderosm.config.settings.get('spatialite_srid'),
+            postgis_srid=spiderosm.config.settings.get('postgis_srid')
+            )
 
 ### Customizing Canonical Names
 
@@ -259,13 +294,6 @@ In addition .osm.xml files can be parsed by spiderosm.
 OSM binary files (.osm.pbf) parsing is currently supported via the optional python package
 imposm.parser (not available for windows.)
 
-### Coordinate Reference Systems
-
-CRS information is not currently determined from input files, and there is no
-automatic translation.  Input files should be in a locally appropriate
-projection.  OSM data is translated from latlon to the local projection by the
-code in osm.py  See the example toplevels (spider_berkeley.py and
-spider\_portland\_pnwk.py) for how to setup projection information.
 
 ## Path Networks (.pnwk.geojson)
 

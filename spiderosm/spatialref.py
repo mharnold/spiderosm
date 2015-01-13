@@ -14,14 +14,11 @@ e.g. '+proj=utm +zone=10 +ellps=WGS84 +units=m +no_defs',
             'srtext': 'PROJCS["NAD_1983_UTM_Zone_10N",GEOGCS["GCS_North_American_1983",DATUM["D_North_American_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-123],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]'
 Also know as wkt = well known text.  Needed to specify a new srs for a spatially enabled database (postgis or spatialite)
 
-If the optional osr package is installed ('%pip install osr') only one of proj4text or srtext need be specified, the other will be auto derived.
+POSSIBLY, if the optional osr package is installed ('%pip install osr') only one of proj4text or srtext need be specified, the other will be auto derived.  THIS NEEDS TESTING.
 
 auth_name, auth_srid
 e.g.  auth_name='EPSG', auth_srid=26910
-Needed when specifying a new srs entry for a spatially eabled database (postgis or spatialite.)
-
-xxx
-
+Needed when specifying a new srs entry for a spatially enabled database (postgis or spatialite.)
 '''
 
 import json

@@ -32,41 +32,65 @@ class Match(object):
             units=None,
             bbox=None,
             out_dir=None,
-            db=None):
+            db=None,
 
+            #city data (jurisdictional centerline)
+            city_url=None,
+            city_zip=None,
+            city_shp=None,
+            city_geojson=None,
+            centerline_to_pnwk=None,
+            city_network=None,
+
+            #osm data (downloaded via overpass API by default)
+            osm_url=None,
+            osm=None,
+            osm_network=None,
+
+            #osm base (before name fixes)
+            base=None,
+            base_network=None
+            ):
+
+        # spatial ref - complicated (for backward compatibility)
         if srs:
             if units:
                 assert srs.units == units
-            else: 
+            elif srs.units: 
                 units = srs.units
+            else:
+                units = 'meters'
 
             if proj4text:
                 assert srs.proj4text == proj4text
             else:
                 proj4text = srs.proj4text
+        else:
+            # if no srs, and no proj4text, we may be able to derive proj4text from the city shapeifle
+            if not proj4text and self.city_shp: 
+                proj4text = spatialref.proj4_from_shapefile(self.city_shp)
 
-                # argument defaults 
+        # argument defaults 
         if not out_dir: out_dir = 'data'
-        if not units: units = 'meters'
+        if not centerline_to_pnwk: centerline_to_pnwk = centerline.berkeley_pnwk        
+        if not city_network: city_network = os.path.join(out_dir,'city') # .pnwk.geojson
 
         # properties
         self.project = project
         self.srs = srs
-        self._proj4text = proj4text
+        self.proj4text = proj4text
         self.units = units
         self.bbox = bbox
         self.out_dir = out_dir
         self.db = db;
 
-        # city pnwk gen func
-        self.city_centerline_to_pnwk = centerline.berkeley_pnwk        
-
-        # city paths
-        self.city_url = None
-        self.city_zip = None
-        self.city_shp = None
-        self.city_geojson = None
-        self.city_network = os.path.join(out_dir,'city') # .pnwk.geojson
+        # city 
+        self.city_url = city_url
+        self.city_zip = city_zip
+        self.city_shp = city_shp
+        self.city_geojson = city_geojson
+        self.centerline_to_pnwk = centerline_to_pnwk # centerline to pnwk func
+        self.city_network = city_network
 
         # osm paths
         self.osm_url = None
@@ -81,10 +105,13 @@ class Match(object):
         # logging
         self.log_current_task = None       
 
-        # setup
-        self._projection = None
-        if not os.path.exists(out_dir): os.makedirs(out_dir)
+        # projection
+        if self.proj4text:
+            self.projection = geo.Projection(self.proj4text)
+        else:
+            self.projection = None
 
+        # checks
         if not self.proj4text:
             log.warning("Unable to determine proj4text for Match object %s\n"
                     "  (Needed to convert raw osm data to appropriate planar coordinates.)",
@@ -94,26 +121,8 @@ class Match(object):
             log.warning("No srs.url specified for Match object %s\n"
                     "  (Needed for geojson file crs specifications.)", self.project)
 
-    @property
-    def proj4text(self):
-        if not self._proj4text and self.city_shp:
-            self._proj4text = spatialref.proj4_from_shapefile(self.city_shp)
-            #print 'DEB derived proj4_text:', self.proj4text
-        return self._proj4text
-
-    @proj4text.setter
-    def proj4text(self, value):
-        self._proj4text = value
-
-    @property
-    def projection(self):
-        if not self._projection and self.proj4text:
-            self._projection = geo.Projection(self.proj4text)
-        return self._projection
-
-    @projection.setter
-    def projection(self,value):
-        self._projection = value
+        # path setup
+        if not os.path.exists(self.out_dir): os.makedirs(self.out_dir)
 
     def log_begin_task(self,msg):
         assert not self.log_current_task
