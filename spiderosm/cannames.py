@@ -30,10 +30,20 @@ def match_probability(names1, names2):
 def match_score(names1,names2):
     return round(100*match_probability(names1,names2))
 
+# CHARACTER RESTRICTION
+# allowed_chars are left unchanged
+# ignored_chars are deleted
+# characters that are neither in allowed_chars nor in ingored_chars are mapped to space (' ') 
+allowed_chars = string.ascii_letters + string.digits + " "  
+ignored_chars = "'"
+
+# SINGLE WORD SUBSTITUTIONS 
+# applied after words are mapped to all upper case
 # TODO: consider adding USPS canonical abbreviations for street types
-# http://cpansearch.perl.org/src/SDERLE/Geo-Coder-US-0.21/US/Codes.pm
+# ttp://cpansearch.perl.org/src/SDERLE/Geo-Coder-US-0.21/US/Codes.pm
 # cped to portland_peds/Codes.pm.txt 
-rewrites = {
+word_substitutions = {
+                # directionals
 		'NORTH':'N',
 		'SOUTH':'S',
 		'EAST':'E',
@@ -42,7 +52,12 @@ rewrites = {
 		'NORTHWEST':'NW',
 		'SOUTHEAST':'SE',
 		'SOUTHWEST':'SW',
+
+                # misc
+                'JUNIOR':'JR',
+                'SAINT':'ST',
 	
+                # street types
 		'AVENUE':'AVE',
                 'BRIDGE':'BRG',
 		'BOULEVARD':'BLVD',
@@ -52,28 +67,26 @@ rewrites = {
                 'FREEWAY':'',
                 'FWY':'',
 		'HIGHWAY':'HWY',
-                'JUNIOR':'JR',
 		'LANE':'LN',
 		'MOUNT':'MT',
 		'PARKWAY':'PKWY',
 		'PLACE':'PL',
 		'ROAD':'RD',
-		'SAINT':'ST',
 		'STREET':'ST',
                 'SUMMIT':'SMT',
 		'TERRACE':'TER',
                 'TRAIL':'TRL'
  		}
 
+
 def restrict_chars(name):
-    ALLOWED_CHARS = string.ascii_letters + string.digits + " "  # others get mapped to ' '
-    IGNORE_CHARS = "'"
+    global allowed_chars, ingored_chars
     out = []
     for c in name:
-        if c in ALLOWED_CHARS: 
+        if c in allowed_chars: 
             out.append(c) 
         else:
-            if c not in IGNORE_CHARS: out.append(' ')
+            if c not in ignored_chars: out.append(' ')
     return ''.join(out)
 
 def canonical_street_name(name):
@@ -81,6 +94,8 @@ def canonical_street_name(name):
     Regularizes street name to facilitate comparison.  
     Converts to all caps and applies standard abbreviations.
     '''
+    global word_substitutions
+
     if name is None: return None;
 
     #print "DEBUG name in: ", name
@@ -97,11 +112,11 @@ def canonical_street_name(name):
     words = [w for w in words if w != '']
     #print "DEBUG words: ", words
 
-    # rewrites
+    # word substitutions
     new_words = []
     for word in words:
-            if rewrites.has_key(word):
-                    new=rewrites[word]
+            if word_substitutions.has_key(word):
+                    new=word_substitutions[word]
                     if len(new)>0: new_words.append(new)
                     continue
             if len(word)>1 and word[0]=='I' and word[1:].isdigit(): 
