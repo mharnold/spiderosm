@@ -2,6 +2,7 @@
 Canonical street names!
 (To allow name matching between OSM and Portland City DB.)
 '''
+import re
 import string
 
 import pylev
@@ -420,6 +421,42 @@ word_substitutions = {
         'WELLS':'WLS',
         'WY':'WAY',
                         }
+# REGULAR EXPRESSION BASED NAME MAPPINGS
+class NameMap(object):
+    p = None
+    template = None
+    def __init__(self,r,template):
+        self.p=re.compile(r)
+        self.template = template
+    def apply_map(self,name):
+        m = self.p.match(name)
+        if m:
+            #print 'DEB NameMap.apply name in:',name,'groups:',m.groups()
+            name = self.template.format(*m.groups())
+            #print 'DEB name out:',name
+        return name
+
+mappings = [
+        # I 84 FWY -> I 84
+        NameMap(r"(.*\d\s+)(\bFWY\b)(.*)$", 
+            "{0}{2}"),
+        
+        # TRANSIT CTR -> TC
+        NameMap(r"(.*)(\bTRANSIT\s+CTR\b)(.*)$",
+            "{0}TC{2}"),
+
+        # UNITED STATES -> US
+        NameMap(r"(.*)(\bUNITED\s+STATES\b)(.*)$",
+            "{0}US{2}"),
+
+        # MC GEE -> MCGEE, LE ROY -> LEROY
+        NameMap(r"(.*)\b(MC|LE)\s+(\S+.*)$",
+            "{0}{1}{2}"),
+        
+        # US 30 -> HWY 30,  OR 30 -> HWY 30, etc.
+        NameMap(r"(.*)\b(US|OR)\s*(\d.*)$",
+            "{0}HWY {2}"),
+        ]
 
 def restrict_chars(name):
     global allowed_chars, ingored_chars
@@ -431,30 +468,8 @@ def restrict_chars(name):
             if c not in ignored_chars: out.append(' ')
     return ''.join(out)
 
-def canonical_street_name(name):
-    '''
-    Regularizes street name to facilitate comparison.  
-    Converts to all caps and applies standard abbreviations.
-    '''
+def make_word_substitutions(words):
     global word_substitutions
-
-    if name is None: return None;
-
-    #print "DEBUG name in: ", name
-    space = ' ' 
-
-    # restrict character set: simplicity, security
-    name = restrict_chars(name)
-
-    # all caps
-    name = name.upper()
-
-    # words
-    words=name.strip().split(space)
-    words = [w for w in words if w != '']
-    #print "DEBUG words: ", words
-
-    # word substitutions
     new_words = []
     for word in words:
             if word_substitutions.has_key(word):
@@ -466,51 +481,48 @@ def canonical_street_name(name):
                     new_words.append(word[1:])
                     continue
             new_words.append(word)
-    words = new_words
+    return new_words
 
-    # delete 'FWY'
-    new_words = []
-    for word in words:
-        if word == 'FWY': continue
-        new_words.append(word)
-    words = new_words
+def apply_mappings(name):
+    global mappings
+    for nmap in mappings:
+        name = nmap.apply_map(name)
+    return name
 
-    # two word rewrites
-    new_words = []
-    skip=False
-    for i in range(len(words)):
-        if skip:
-            skip=False
-            continue
-        if i == len(words)-1:
-            #last word
-            new_words.append(words[i])
-            continue
-        if words[i] == 'TRANSIT' and words[i+1] == 'CTR':
-            new_words.append('TC')
-            skip=True
-            continue
-        if words[i] == 'UNITED' and words[i+1] == 'STATES':
-            new_words.append('US')
-            skip=True
-            continue
-        if words[i+1].isdigit() and words[i] in ['HWY','US','OR']:
-            new_words.append('HWY')
-            new_words.append(words[i+1])
-            skip=True
-            continue
-        if words[i] == 'MC':
-            new_words.append('MC' + words[i+1])
-            skip=True
-            continue
-        if words[i] == 'LE':
-            new_words.append('LE' + words[i+1])
-            skip=True
-            continue
-        new_words.append(words[i])
-    words = new_words
+def canonical_street_name(name):
+    '''
+    Regularizes street name to facilitate comparison.  
+    Converts to all caps and applies standard abbreviations.
+    '''
+
+    if name is None: return None;
+
+    #print "DEBUG name in: ", name
+    space = ' ' 
+
+    # restrict character set: simplicity, security
+    name = restrict_chars(name)
+
+    # make all caps
+    name = name.upper()
+
+    # turn into word list
+    words=name.strip().split(space)
+    words = [w for w in words if w != '']
+    #print "DEBUG words: ", words
+
+    # substitutions (single word)
+    words = make_word_substitutions(words)
 
     # single spaces between words
+    out = ' '.join(words).strip()
+
+    out = apply_mappings(out)
+
+    # single spaces between words
+    words=out.strip().split(space)
+    words = [w for w in words if w != '']
+    #print "DEBUG words: ", words
     out = ' '.join(words).strip()
 
     return out
