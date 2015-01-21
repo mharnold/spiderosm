@@ -233,36 +233,23 @@ You may also want to customize canonical name generation.  This is especially de
 
 Before comparing street names in the OSM and jurisdictional data, names from both sources are 'canonicalized':  they are converted to upper-case, special characters are removed, and standard abbreviations are applied.  This is so, for example"North Harvard Street" and "N. HARVARD ST" will both be mapped to "N HARVARD ST" and thus match, as they should.
 
+This process can be customized via the following global variables in the spiderosm cannames module:
+
+**allowed\_chars** - characters not in this string are mapped to a space.  
+**ignored\_chars** - characters in this string are deleted.  
+**word\_substitutions** - this dictionary specifies conversion (abbreviation) of single words.  
+**mappings** - specifies more complex transformations, via regular expressions and format templates.  
+
 Here is an example of canonical name customization for Denmark:
 
+    import spiderosm.cannames
+    spiderosm.cannames.allowed_chars = string.ascii_letters + string.digits + "-" + " " + u"æøåÆØÅ" 
+    spiderosm.cannames.word_substitutions = {
+	'GAMMEL':'GL',
+	'DOKTOR':'DR',
+        }
 
-    # ---------------------------------------------------------
-    # Functions used to override spiderosm defaults
-    # ---------------------------------------------------------
-    def restrict_danish_chars(name):
-        ALLOWED_CHARS = string.ascii_letters + string.digits + "-" + " " + u"æøåÆØÅ"  # others get mapped to ' ' 
-        IGNORE_CHARS = "'"
-        out = []
-        for c in name:
-            if c in ALLOWED_CHARS: 
-                out.append(c) 
-            else:
-                if c not in IGNORE_CHARS: out.append(' ')
-        return ''.join(out)
-
-    rewrites = {
-                    'GAMMEL':'GL',
-                    'DOKTOR':'DR',
-                }
-
-    # --------------------------------------------------------
-    # Monkey patching!!!!
-    # --------------------------------------------------------
-    spiderosm.cannames.restrict_chars = restrict_danish_chars
-    spiderosm.cannames.rewrites = rewrites
-
-This works fine.  But,
-I plan to provide hooks, to allow cleaner canonical name customization, very soon!
+See the cannnames.py source file for details.    
 
 ## Data Formats
 
