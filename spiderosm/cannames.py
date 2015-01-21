@@ -39,9 +39,6 @@ ignored_chars = "'"
 
 # SINGLE WORD SUBSTITUTIONS 
 # applied after words are mapped to all upper case
-# TODO: consider adding USPS canonical abbreviations for street types
-# ttp://cpansearch.perl.org/src/SDERLE/Geo-Coder-US-0.21/US/Codes.pm
-# cped to portland_peds/Codes.pm.txt 
 word_substitutions = {
         # directionals
         'NORTH':'N',
