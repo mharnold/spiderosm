@@ -421,6 +421,7 @@ word_substitutions = {
         'WELLS':'WLS',
         'WY':'WAY',
                         }
+
 # REGULAR EXPRESSION BASED NAME MAPPINGS
 class NameMap(object):
     p = None
@@ -468,9 +469,25 @@ def restrict_chars(name):
             if c not in ignored_chars: out.append(' ')
     return ''.join(out)
 
-def make_word_substitutions(words):
+def _name_to_words(name):
+    words=name.strip().split(space)
+    words = [w for w in words if w != '']
+    #print "DEBUG words: ", words
+    return words
+
+def _words_to_name(words):
+    return ' '.join(words).strip()
+
+def _canonical_ws(name):
+    words = _name_to_words(name)
+    return _words_to_name(words)
+
+def _make_word_substitutions(name):
     global word_substitutions
+
+    words = _names_to_words(name)
     new_words = []
+   
     for word in words:
             if word_substitutions.has_key(word):
                     new=word_substitutions[word]
@@ -481,9 +498,10 @@ def make_word_substitutions(words):
                     new_words.append(word[1:])
                     continue
             new_words.append(word)
-    return new_words
 
-def apply_mappings(name):
+    return _words_to_name(new_words)
+
+def _apply_mappings(name):
     global mappings
     for nmap in mappings:
         name = nmap.apply_map(name)
@@ -494,38 +512,15 @@ def canonical_street_name(name):
     Regularizes street name to facilitate comparison.  
     Converts to all caps and applies standard abbreviations.
     '''
-
     if name is None: return None;
 
-    #print "DEBUG name in: ", name
-    space = ' ' 
-
-    # restrict character set: simplicity, security
     name = restrict_chars(name)
-
-    # make all caps
     name = name.upper()
+    name = _make_word_substitutions(name)
+    name = _apply_mappings(name)
+    name = _canonical_ws(name)
 
-    # turn into word list
-    words=name.strip().split(space)
-    words = [w for w in words if w != '']
-    #print "DEBUG words: ", words
-
-    # substitutions (single word)
-    words = make_word_substitutions(words)
-
-    # single spaces between words
-    out = ' '.join(words).strip()
-
-    out = apply_mappings(out)
-
-    # single spaces between words
-    words=out.strip().split(space)
-    words = [w for w in words if w != '']
-    #print "DEBUG words: ", words
-    out = ' '.join(words).strip()
-
-    return out
+    return name
 
 def test_can(name1,name2=None):
     can1 = canonical_street_name(name1)
