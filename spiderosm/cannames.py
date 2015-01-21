@@ -427,7 +427,7 @@ class NameMap(object):
     p = None
     template = None
     def __init__(self,r,template):
-        self.p=re.compile(r)
+        self.p=re.compile(r, re.UNICODE)
         self.template = template
     def apply_map(self,name):
         m = self.p.match(name)
@@ -438,6 +438,10 @@ class NameMap(object):
         return name
 
 mappings = [
+        # I84 -> I 84
+        NameMap(r"(.*\bI)(\d.*)$",
+            "{0} {1}"),
+
         # I 84 FWY -> I 84
         NameMap(r"(.*\d\s+)(\bFWY\b)(.*)$", 
             "{0}{2}"),
@@ -457,6 +461,7 @@ mappings = [
         # US 30 -> HWY 30,  OR 30 -> HWY 30, etc.
         NameMap(r"(.*)\b(US|OR)\s*(\d.*)$",
             "{0}HWY {2}"),
+
         ]
 
 def restrict_chars(name):
@@ -470,7 +475,7 @@ def restrict_chars(name):
     return ''.join(out)
 
 def _name_to_words(name):
-    words=name.strip().split(space)
+    words=name.strip().split(' ')
     words = [w for w in words if w != '']
     #print "DEBUG words: ", words
     return words
@@ -485,17 +490,13 @@ def _canonical_ws(name):
 def _make_word_substitutions(name):
     global word_substitutions
 
-    words = _names_to_words(name)
+    words = _name_to_words(name)
     new_words = []
    
     for word in words:
             if word_substitutions.has_key(word):
                     new=word_substitutions[word]
                     if len(new)>0: new_words.append(new)
-                    continue
-            if len(word)>1 and word[0]=='I' and word[1:].isdigit(): 
-                    new_words.append('I')
-                    new_words.append(word[1:])
                     continue
             new_words.append(word)
 
@@ -551,7 +552,6 @@ def test():
 
         # 'fuzzy matching' (edit distance)
         assert match_score(['A St'],['B Street']) == 75.0
-
 
 	print 'cannames PASS'
 #doit
