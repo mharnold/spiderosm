@@ -245,11 +245,11 @@ Here is an example of canonical name customization for Denmark:
     import spiderosm.cannames
     spiderosm.cannames.allowed_chars = string.ascii_letters + string.digits + "-" + " " + u"æøåÆØÅ" 
     spiderosm.cannames.word_substitutions = {
-	'GAMMEL':'GL',
-	'DOKTOR':'DR',
+        'GAMMEL':'GL',
+        'DOKTOR':'DR',
         }
 
-See the cannnames.py source file for details.    
+See the cannames.py source file for details.    
 
 ## Data Formats
 
