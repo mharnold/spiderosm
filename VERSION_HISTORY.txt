@@ -1,8 +1,9 @@
 SPIDEROSM VERSION HISTORY
 
+v0.4.2  made geojson output for pnwks more memory efficient.
 v0.4.1  cannames.py modified to better support customization of canonical
 street name generation.
-v0.4.0  added spatialref.py  primar spatial ref specification is now via
+v0.4.0  added spatialref.py  primary spatial ref specification is now via
 spartialreference.org URLS.  spatial reference info included in planar output
 files.
 v0.3.6  added centerline.py rlis_pnwk() and berkeley_pnwk() to top-levels to

@@ -1,4 +1,5 @@
 import copy
+import json
 import numbers
 import pdb
 
@@ -6,6 +7,13 @@ import geojson
 
 import geo
 import spatialref
+
+def geo_feature(geo):
+    """extract a feature from various types of input"""
+    feature = geo
+    try: feature = feature.__geo_interace__
+    except AttributeError: pass
+    return feature
 
 def geo_features(geo):
     """extracts a list of features, for multiple types of input"""
@@ -41,13 +49,36 @@ def geo_feature_collection(geo, srs=None):
     if srs:  fc.crs = spatialref.geojson_crs(srs)
 
     return fc
-        
-def write_geojson(features, outFileName, srs=None):
 
-    fc = geo_feature_collection(features, srs=srs)        
+#If features are seg and node list for example, avoids memory overhead of generating 
+#a full geojson representation of input.
+def write_geojson(features, outFileName, srs=None):
+    features = geo_features(features)
 
     with open(outFileName,'w') as f:
-        geojson.dump(fc,f,indent=2)
+        # FeatureCollection header
+        f.write('{\n"type": "FeatureCollection",\n')
+
+        # spatial ref spec
+        if srs: 
+            f.write('"crs": ')
+            json.dump(spatialref.geojson_crs(srs),f,indent=2)
+            f.write(',\n')
+
+        # features header
+        f.write('"features": [\n')
+
+        # features
+        for feature in features:
+            geojson.dump(feature,f,indent=2)
+            if feature != features[-1]: f.write(',')
+            f.write('\n\n')
+
+        # close features
+        f.write(']\n')
+
+        # close FeatureCollection
+        f.write('}\n')
  
 def filter_features(features, feature_func=None, geom_type=None, col_specs=None, clip_rect=None):
     features = geo_features(features)
@@ -166,6 +197,18 @@ def test():
         def __geo_interface__(self): return self.geo
         def __init__(self,features): 
             self.geo = geojson.FeatureCollection(features)
+
+    class GeoFeatureThingy(object):
+        @property
+        def __geo_interface__(self): return self.geo
+        def __init__(self,feature): 
+            self.geo = feature
+
+    thingys = [GeoFeatureThingy(feature) for feature in features]
+
+    #print 'DEB writing files to test write_geojson()'
+    #write_geojson(features,'foo.geojson')
+    #write_geojson(thingys,'thingy.geojson')
 
     # geo_features()
     out = geo_features(features)

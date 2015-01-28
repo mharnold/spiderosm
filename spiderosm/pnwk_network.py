@@ -243,7 +243,12 @@ class PNwkNetwork(pnwk_namespace.PNwkNamespace):
 
     def write_geojson(self, name=None):
         if not name: name=self.name
-        geofeatures.write_geojson(self, name+self.FILE_EXTENSION, srs=self.srs)
+        # using geo_interface for self is memory inefficient:  requires gen of geojson for entire pnwk
+        #geofeatures.write_geojson(self, name+self.FILE_EXTENSION, srs=self.srs)
+        geofeatures.write_geojson(
+                self.segs.values()+self.jcts.values(), 
+                name+self.FILE_EXTENSION, 
+                srs=self.srs)
 
     def get_bbox(self):
         bbox = geo.BBox() 
@@ -521,4 +526,5 @@ def test():
 #doit
 if __name__ == "__main__":
     test()
+    #_test_read_write1(fname='foo1',fname2='foo2')
  
