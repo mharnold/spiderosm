@@ -1,5 +1,7 @@
 SPIDEROSM VERSION HISTORY
 
+v0.4.3  switch to importing json highway only osm data via overpass QL 
+(as opposed to overpass map query)
 v0.4.2  made geojson output for pnwks more memory efficient.
 v0.4.1  cannames.py modified to better support customization of canonical
 street name generation.

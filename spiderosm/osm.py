@@ -1,9 +1,13 @@
+import gzip
+import json
 import os
+import sys
 import StringIO
 import urllib
+import urllib2
 
-import pyproj
 import geojson
+import pyproj
 
 import geo
 import geofeatures
@@ -12,6 +16,28 @@ import osmparser
 import pnwk
 
 OSM_GEOJSON_FILE_EXTENSION = '.osm.geojson'
+OSM_JSON_FILE_EXTENSION = '.osm.json'
+
+def _overpass_get(query):
+    overpass_url = 'http://overpass-api.de/api/interpreter'
+    payload = {'data':query}
+    url_parms = urllib.urlencode(payload)
+    url = overpass_url + '?' + url_parms
+
+    request = urllib2.Request(url)
+    request.add_header('Accept-encoding', 'gzip')
+    response = urllib2.urlopen(request)
+    #print 'DEB _overpass_get response headers:', response.info()
+
+    # decompress
+    if response.info().get('Content-Encoding') == 'gzip':
+        buf = StringIO.StringIO(response.read())
+        f = gzip.GzipFile(fileobj=buf)
+        data = f.read()
+    else:
+        data = response.read()
+
+    return data
 
 class Way(object):
     def __init__(self, tags, node_ids):
@@ -45,20 +71,18 @@ class OSMData(object):
 	for osmId,tags,coords in nodes_in:
             self._parse_node(osmId, coords, tags=tags)
 
-    # callback for ways 
-    def _parse_ways(self, ways_in):
-        for osmid, tags, refs in ways_in:
-
+    def _parse_way(self, osmid, tags, refs):
 	    # roads only
-	    if not ('highway' in tags): continue
+	    if not ('highway' in tags): return
             
             # at least two nodes (in clip area)
-            count = 0
-            for ref in refs:
-                if ref in self.nodes: 
-                    count += 1
-                    if count >= 2: break
-            if count < 2: continue
+            if self.clip_rect:
+                count = 0
+                for ref in refs:
+                    if ref in self.nodes: 
+                        count += 1
+                        if count >= 2: break
+                if count < 2: return
 
             # remove refs to missing nodes
             new = []
@@ -66,8 +90,37 @@ class OSMData(object):
                 if ref in self.nodes: new.append(ref)
             refs = new
 
-	    self.ways[osmid] = Way(tags=tags, node_ids=refs)		
- 
+	    self.ways[osmid] = Way(tags=tags, node_ids=refs)	
+
+    # callback for ways 
+    def _parse_ways(self, ways_in):
+        for osmid, tags, refs in ways_in:
+            self._parse_way(osmid, tags, refs)
+
+    # initialize from osm json data (acquired, e.g., from overpass api)
+    def _parse_osm_json(self, osm_json):
+        log.info('Parsing osm json data')
+        # nodes
+        for element in osm_json["elements"]:
+            if element["type"] == "node": 
+                osmId = element["id"]
+                coords = (element["lon"], element["lat"])
+                tags = {}
+                if len(element)>4:
+                    for (k,v) in element.items():
+                        tags[k]=v
+                self._parse_node(osmId, coords, tags=tags)
+
+        # ways
+        for element in osm_json["elements"]:
+            if element["type"] == "way": 
+                osmId = element["id"]
+                tags = element["tags"]
+                refs = element["nodes"]
+                self._parse_way(osmId, tags, refs)
+      				
+        log.info('%d ways, %d nodes', len(self.ways), len(self.nodes))
+
     # read in an OSM data file
     # processing in two passes to avoid thrashing when clipping an area from huge files.
     def _parse_input_file(self, file_name, xml_format=None):
@@ -101,6 +154,22 @@ class OSMData(object):
 				
         log.info('%d ways, %d nodes', len(self.ways), len(self.nodes))
 
+    # OBSOLETE version (full area query / xml)
+    # download OSM data via overpass API and parse it.
+    def _import_and_parse_overpass_data_map_query(self):
+        # need bbox in geo: (lon,lat)
+        if self.proj:
+            geo_bbox = self.proj.project_box(self.clip_rect, rev=True)
+        else:
+            geo_bbox = self.clip_rect
+        self.clip_rect = None # no need to double clip
+        
+        overpass_url='http://overpass-api.de/api/map?bbox=%f,%f,%f,%f' % geo_bbox
+        print 'DEB overpass url:', overpass_url
+        (temp_file_name, headers) = urllib.urlretrieve(overpass_url)
+        self._parse_input_file(temp_file_name, xml_format=True)
+        os.remove(temp_file_name)
+
     # download OSM data via overpass API and parse it.
     def _import_and_parse_overpass_data(self):
         # need bbox in geo: (lon,lat)
@@ -110,12 +179,30 @@ class OSMData(object):
             geo_bbox = self.clip_rect
         self.clip_rect = None # no need to double clip
         
-        overpass_url='http://overpass-api.de/api/map?bbox=%f,%f,%f,%f' % geo_bbox
-        (temp_file_name, headers) = urllib.urlretrieve(overpass_url)
+        # highway ways (only) and referenced nodes (in json format)
+        template = """
+            [out:json];
 
-        self._parse_input_file(temp_file_name, xml_format=True)
-        os.remove(temp_file_name)
+            // ways of type highway 
+            way({min_lat}, {min_lon}, {max_lat}, {max_lon})[highway];out body qt;
 
+            // referenced nodes 
+            >; out body qt;
+        """
+
+        (min_lon, min_lat, max_lon, max_lat) = geo_bbox
+        query = template.format(
+                min_lat=min_lat,
+                min_lon=min_lon,
+                max_lat=max_lat,
+                max_lon=max_lon)
+        data_string = _overpass_get(query)
+        #print 'DEB data_string len:', len(data_string)
+        #print 'data_string:', data_string
+        log.info('json string -> json, begin.')
+        data_json = json.loads(data_string)
+        self._parse_osm_json(data_json)
+       
     # remove stutters (repeated node refs) from ways
     def _remove_stutters(self):
         num_removed = 0
@@ -175,6 +262,7 @@ class OSMData(object):
         if file_name:
 	    self._parse_input_file(file_name)
         else:
+            #self._import_and_parse_overpass_data_map_query()
             self._import_and_parse_overpass_data()
             
         #remove stutters from ways (repeated node refs)

@@ -28,7 +28,7 @@ setuptools.setup(name='spiderosm',
           'shapely', #requires geos library, on Mac: "%brew install geos"  
           'pylev',
           'geojson >= 1.0.9',
-          'pyshp' 
+          'pyshp',
           ],
       extras_require={
           'spatialite' : ['pyspatialite >= 3.0.1'],
