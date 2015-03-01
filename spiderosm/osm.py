@@ -2,9 +2,6 @@ import gzip
 import json
 import os
 import sys
-import StringIO
-import urllib
-import urllib2
 
 import geojson
 import pyproj
@@ -12,6 +9,7 @@ import pyproj
 import geo
 import geofeatures
 import log
+import misc
 import osmparser
 import pnwk
 
@@ -19,24 +17,11 @@ OSM_GEOJSON_FILE_EXTENSION = '.osm.geojson'
 OSM_JSON_FILE_EXTENSION = '.osm.json'
 
 def _overpass_get(query):
-    overpass_url = 'http://overpass-api.de/api/interpreter'
-    payload = {'data':query}
-    url_parms = urllib.urlencode(payload)
-    url = overpass_url + '?' + url_parms
-
-    request = urllib2.Request(url)
-    request.add_header('Accept-encoding', 'gzip')
-    response = urllib2.urlopen(request)
-    #print 'DEB _overpass_get response headers:', response.info()
-
-    # decompress
-    if response.info().get('Content-Encoding') == 'gzip':
-        buf = StringIO.StringIO(response.read())
-        f = gzip.GzipFile(fileobj=buf)
-        data = f.read()
-    else:
-        data = response.read()
-
+    url = 'http://overpass-api.de/api/interpreter'
+    parms = {'data':query}
+    response_headers = {}
+    data = misc.get_url(url,parms=parms,gzip=True,info=response_headers)
+    #print 'DEB _overpass_get response_headers:',response_headers
     return data
 
 class Way(object):
@@ -166,7 +151,7 @@ class OSMData(object):
         
         overpass_url='http://overpass-api.de/api/map?bbox=%f,%f,%f,%f' % geo_bbox
         print 'DEB overpass url:', overpass_url
-        (temp_file_name, headers) = urllib.urlretrieve(overpass_url)
+        (temp_file_name, headers) = misc.urlretrieve(overpass_url,suffix='.osm.xml',gzip=True)
         self._parse_input_file(temp_file_name, xml_format=True)
         os.remove(temp_file_name)
 

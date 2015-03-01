@@ -24,11 +24,11 @@ Needed when specifying a new srs entry for a spatially enabled database (postgis
 import json
 import os.path
 import sys
-import urllib2
 
 import geojson.crs
 
 import config
+import misc
 import log
 
 # by default db srid's derived from auth_srid by adding this offset
@@ -65,10 +65,10 @@ class SRS(object):
 
         # if spatialireference.org url, use it!
         if self.url:
-            if not self.srtext: self.srtext = get_url(self.url+'esriwkt/')
-            if not self.proj4text: self.proj4text = get_url(self.url+'proj4/')
+            if not self.srtext: self.srtext = misc.get_url(self.url+'esriwkt/')
+            if not self.proj4text: self.proj4text = misc.get_url(self.url+'proj4/')
             if (not self.auth_name) or (not self.auth_srid):
-                text = get_url(self.url+'json/')
+                text = misc.get_url(self.url+'json/')
                 # fixe bad json syntax on spatialref.org
                 text = text.replace('\'','"')
                 data = json.loads(text)
@@ -108,9 +108,6 @@ class SRS(object):
             text += self.info_attr(attr)
 
         return text
-
-def get_url(url):
-    return urllib2.urlopen(url).read()
 
 def import_osr():
     global osr
