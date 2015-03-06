@@ -86,7 +86,7 @@ def create_dirs(pathname):
     if len(dirs)>0 and not os.path.exists(dirs): os.makedirs(dirs)
 
 # fetch url to file
-def retrieve_url(url,filename=None, suffix='', gzip=False):
+def retrieve_url(url, filename=None, parms=None, suffix='', gzip=False, force=False):
     # if no filename, create temp file.
     if not filename:
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp:
@@ -95,7 +95,7 @@ def retrieve_url(url,filename=None, suffix='', gzip=False):
     create_dirs(filename)
 
     response_headers = {}
-    data = get_url(url,gzip=gzip,info=response_headers)
+    data = get_url(url, parms=parms, gzip=gzip, info=response_headers)
 
     with open(filename,'w') as f:
         f.write(data)
@@ -166,7 +166,7 @@ def test():
     _test_percent()
     _test_gunzip()
     _test_url_size()
-    _test_retrieve_url()
+    #_test_retrieve_url()
     #_test_update_file_from_url()
     #_test_dates()
     #_test_print_now()

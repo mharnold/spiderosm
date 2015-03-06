@@ -13,16 +13,61 @@ import misc
 import osmparser
 import pnwk
 
-OSM_GEOJSON_FILE_EXTENSION = '.osm.geojson'
-OSM_JSON_FILE_EXTENSION = '.osm.json'
-
-def _overpass_get(query):
+def overpass_retrieve(query, filename=None, suffix=None):
     url = 'http://overpass-api.de/api/interpreter'
     parms = {'data':query}
-    response_headers = {}
-    data = misc.get_url(url,parms=parms,gzip=True,info=response_headers)
-    #print 'DEB _overpass_get response_headers:',response_headers
-    return data
+    (filename, response_headers) = misc.retrieve_url(
+            url,
+            parms=parms,
+            filename=filename,
+            suffix=suffix,
+            gzip=True)
+    return (filename, response_headers)
+
+# download OSM data via overpass API 
+# if date given, get (attic) data as of given date.
+def overpass_retrieve_area(geo_bbox, date=None, format='json', filename=None, verbose=False):
+
+    ### FORMAT
+    if format=='xml':
+        #overpass default
+        format_spec=''
+        suffix = '.osm.xml'
+    else:
+        assert format=='json'
+        format_spec='[out:json]'
+        suffix = '.osm.json'
+
+    ### DATE 
+    if date:
+        date_spec='[date:"%s"]' % date
+    else:
+        date_spec=''
+    
+    ### CONSTRUCT QUERY FROM TEMPLATE
+    # highway ways (only) and referenced nodes (in json format)
+    template = """
+        {format_spec}{date_spec};
+
+        // ways of type highway 
+        way({min_lat}, {min_lon}, {max_lat}, {max_lon})[highway];out body qt;
+
+        // referenced nodes 
+        >; out body qt;
+    """
+
+    (min_lon, min_lat, max_lon, max_lat) = geo_bbox
+    query = template.format(
+            format_spec=format_spec,
+            date_spec=date_spec,
+            min_lat=min_lat,
+            min_lon=min_lon,
+            max_lat=max_lat,
+            max_lon=max_lon)
+
+    ### DOWNLOAD 
+    (filename, response_headers) = overpass_retrieve(query, filename=filename, suffix=suffix)
+    return (filename, response_headers)
 
 class Way(object):
     def __init__(self, tags, node_ids):
@@ -82,112 +127,78 @@ class OSMData(object):
         for osmid, tags, refs in ways_in:
             self._parse_way(osmid, tags, refs)
 
-    # initialize from osm json data (acquired, e.g., from overpass api)
-    def _parse_osm_json(self, osm_json):
-        log.info('Parsing osm json data')
-        # nodes
-        for element in osm_json["elements"]:
-            if element["type"] == "node": 
-                osmId = element["id"]
-                coords = (element["lon"], element["lat"])
-                tags = {}
-                if len(element)>4:
-                    for (k,v) in element.items():
-                        tags[k]=v
-                self._parse_node(osmId, coords, tags=tags)
-
-        # ways
-        for element in osm_json["elements"]:
-            if element["type"] == "way": 
-                osmId = element["id"]
-                tags = element["tags"]
-                refs = element["nodes"]
-                self._parse_way(osmId, tags, refs)
-      				
-        log.info('%d ways, %d nodes', len(self.ways), len(self.nodes))
-
     # read in an OSM data file
     # processing in two passes to avoid thrashing when clipping an area from huge files.
-    def _parse_input_file(self, file_name, xml_format=None):
-        if xml_format == None:
-	    xml_format = (os.path.splitext(file_name)[1] == '.xml')
-				
-        # first pass: nodes 
+    def _parse_input_file(self, file_name):
+        file_format = os.path.splitext(file_name)[1] 
+
+        ### FIRST PASS: NODES
         log.info('Reading nodes from osm file: %s', file_name)
-        if xml_format:
+        if file_format == '.xml':
             p = osmparser.OSMParser(
                     all_nodes_callback=self._parse_nodes)
 	    p.parse_xml_file(file_name)
-	else:
+        elif file_format == '.json':
+            with open(file_name,"r") as f: 
+                osm_json = json.load(f)
+            for element in osm_json["elements"]:
+                if element["type"] == "node": 
+                    osmId = element["id"]
+                    coords = (element["lon"], element["lat"])
+                    tags = {}
+                    if len(element)>4:
+                        for (k,v) in element.items():
+                            tags[k]=v
+                    self._parse_node(osmId, coords, tags=tags)
+        elif file_format == '.pbf':
             # osmparser.py does not currently handle .osm.pbf, attempt to use imposm.parser
             import imposm.parser
 	    p = imposm.parser.OSMParser(
                     coords_callback=self._parse_coords,
                     nodes_callback=self._parse_nodes)
 	    p.parse(file_name)
+        else:
+            log.critical("don't know how to parse osm file format %s", file_format)
+            assert(False)
 
-        # second pass: ways
+        ### SECOND PASS: WAYS
         log.info('Reading ways from osm file: %s', file_name)
-        if xml_format:
+        if file_format == '.xml':
             p = osmparser.OSMParser(
 	        ways_callback=self._parse_ways)
 	    p.parse_xml_file(file_name)
-        else:
+        elif file_format == '.json':
+            for element in osm_json["elements"]:
+                if element["type"] == "way": 
+                    osmId = element["id"]
+                    tags = element["tags"]
+                    refs = element["nodes"]
+                    self._parse_way(osmId, tags, refs)
+        elif file_format == '.pbf':
 	    p = imposm.parser.OSMParser(
 	        ways_callback=self._parse_ways)
             p.parse(file_name)
+        else:
+            log.critical("don't know how to parse osm file format %s", file_format)
+            assert(False)
 				
         log.info('%d ways, %d nodes', len(self.ways), len(self.nodes))
 
-    # OBSOLETE version (full area query / xml)
     # download OSM data via overpass API and parse it.
-    def _import_and_parse_overpass_data_map_query(self):
+    # if date given, get (attic) data as of given date.
+    def _import_and_parse_overpass_data(self,date=None):
         # need bbox in geo: (lon,lat)
         if self.proj:
             geo_bbox = self.proj.project_box(self.clip_rect, rev=True)
         else:
             geo_bbox = self.clip_rect
         self.clip_rect = None # no need to double clip
-        
-        overpass_url='http://overpass-api.de/api/map?bbox=%f,%f,%f,%f' % geo_bbox
-        print 'DEB overpass url:', overpass_url
-        (temp_file_name, headers) = misc.urlretrieve(overpass_url,suffix='.osm.xml',gzip=True)
-        self._parse_input_file(temp_file_name, xml_format=True)
+
+        (temp_file_name, headers) = overpass_retrieve_area(geo_bbox, date=date)
+                
+        self._parse_input_file(temp_file_name)
         os.remove(temp_file_name)
 
-    # download OSM data via overpass API and parse it.
-    def _import_and_parse_overpass_data(self):
-        # need bbox in geo: (lon,lat)
-        if self.proj:
-            geo_bbox = self.proj.project_box(self.clip_rect, rev=True)
-        else:
-            geo_bbox = self.clip_rect
-        self.clip_rect = None # no need to double clip
-        
-        # highway ways (only) and referenced nodes (in json format)
-        template = """
-            [out:json];
-
-            // ways of type highway 
-            way({min_lat}, {min_lon}, {max_lat}, {max_lon})[highway];out body qt;
-
-            // referenced nodes 
-            >; out body qt;
-        """
-
-        (min_lon, min_lat, max_lon, max_lat) = geo_bbox
-        query = template.format(
-                min_lat=min_lat,
-                min_lon=min_lon,
-                max_lat=max_lat,
-                max_lon=max_lon)
-        data_string = _overpass_get(query)
-        #print 'DEB data_string len:', len(data_string)
-        #print 'data_string:', data_string
-        log.info('json string -> json, begin.')
-        data_json = json.loads(data_string)
-        self._parse_osm_json(data_json)
-       
     # remove stutters (repeated node refs) from ways
     def _remove_stutters(self):
         num_removed = 0
@@ -293,7 +304,7 @@ class OSMData(object):
         return geofeatures.geo_feature_collection(features, srs=self.srs)
 
     def write_geojson(self, name):
-        geofeatures.write_geojson(self,name+OSM_GEOJSON_FILE_EXTENSION)
+        geofeatures.write_geojson(self,name+'.geojson')
         
     # segments split at junctions
     # all attributes (keys) copied unless seg_props/jct_props specified.

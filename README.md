@@ -151,7 +151,7 @@ The Osr python package allows spiderosm to derive proj4text format projection in
 The osr python package can be installed via pip:
 
 ```
-% pip GDAL
+% pip install --upgrade GDAL
 ```
 
 ## Examples
@@ -209,7 +209,7 @@ code in osm.py
 Several types of spatial reference system information are used in spiderosm:  
 **spatialreference.org URL** - This is the preferred method for specifying spatial reference systems to spiderosm. It allows the automatic download of much of the information listed below.  The spatialreference.org URL is also used for the CRS specification in planar (not latlon) geojson output files.  
 **proj4text** - Used for conversion of OSM data to appropriate planar coordiantes.  Also used when adding spatial reference system definitions to postgis and spatialite databases.  
-**WKT (ESRI .prj files)** - Used for adding spatial reference system definitions to postgis and spatialite databases.  If the osr package ('%pip GDAL') is installed, spiderosm can derive proj4text automatically from this.  
+**WKT (ESRI .prj files)** - Used for adding spatial reference system definitions to postgis and spatialite databases.  If the osr package ('%pip install GDAL') is installed, spiderosm can derive proj4text automatically from this.  
 **auth\_name, auth\_srid (e.g. EPSG:32610)** -  Used for adding spatial reference system definitions to postgis and spatialite databases.  
 **units** - Planar coordinates need to be in units of feet or meters.  Meters are the default, units of feet need to be specified explicitly.  
 **postgis\_srid, spatialite\_srid** - srid to use in output to spatially enabled databases.

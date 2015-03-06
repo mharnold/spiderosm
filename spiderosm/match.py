@@ -43,11 +43,13 @@ class Match(object):
             city_network=None,
 
             #osm data (downloaded via overpass API by default)
-            osm_url=None,
-            osm=None,
+            osm_url=None, # DEPRICATED, default to overpass instead.
+            osm=None, # osm data file
             osm_network=None,
 
             #osm base (before name fixes)
+            base_url=None,   # DEPRICATED, default to overpass instead.
+            base_date=None,  # yyyy-mm-dd  (to fetch attic data from overpass-api)
             base=None,
             base_network=None
             ):
@@ -98,9 +100,10 @@ class Match(object):
         self.osm_network = os.path.join(out_dir,'osm') # .pnwk.geojson
 
         # base paths (osm base version)
-        self.base_url = None
-        self.base = None
-        self.base_network = None
+        self.base_url = base_url
+        self.base_date = base_date
+        self.base = base
+        self.base_network = base_network
 
         # logging
         self.log_current_task = None       
@@ -123,6 +126,10 @@ class Match(object):
 
         # path setup
         if not os.path.exists(self.out_dir): os.makedirs(self.out_dir)
+
+    @property
+    def geo_bbox(self):
+        return self.projection.project_box(self.bbox, rev=True)
 
     def log_begin_task(self,msg):
         assert not self.log_current_task
@@ -147,17 +154,30 @@ class Match(object):
             misc.unzip(self.city_zip)
 
     def fetch_osm_data(self):
-        if not self.osm_url: return
-        
+        if self.osm and not self.osm_url: return
+
         self.log_begin_task('fetching OSM data')
-        misc.update_file_from_url(self.osm, url=self.osm_url)
+        if self.osm_url: 
+            misc.update_file_from_url(self.osm, url=self.osm_url)
+        elif not self.osm:
+            self.osm = self.osm_network + '.osm.json'
+            osm.overpass_retrieve_area(
+                    self.geo_bbox,
+                    filename=self.osm)
         self.log_end_task()
 
     def fetch_base_data(self):
-        if not self.base_url: return
+        if self.base and not self.base_url: return
 
-        self.log_begin_task('fetching OSM base data')
-        misc.update_file_from_url(self.base, url=self.base_url)
+        self.log_begin_task('fetching base OSM data')
+        if self.base_url: 
+            misc.update_file_from_url(self.base, url=self.base_url)
+        elif not self.base:
+            self.base = self.osm_network + '_' + self.base_date + '.osm.json'
+            osm.overpass_retrieve_area(
+                    self.geo_bbox,
+                    date=self.base_date,
+                    filename=self.base)
         self.log_end_task()
 
     def build_city_network(self):
@@ -195,9 +215,6 @@ class Match(object):
             city_bbox_buffered = geo.buffer_box(city_bbox,300) #buffer by 100 yards
         log.info('bbox (city bbox with buffer): %s', str(city_bbox_buffered))
         self.bbox = city_bbox_buffered
-
-        #city_bbox_buffered_geo = conf['project_projection'].project_box(city_bbox_buffered, rev=True)
-        #print 'city_bbox_buffered_geo:', city_bbox_buffered_geo
         self.log_end_task()
 
     def set_bbox_from_osm(self):
@@ -217,9 +234,6 @@ class Match(object):
             osm_bbox_buffered = geo.buffer_box(osm_bbox,300) #buffer by 100 yards
         log.info('bbox (osm bbox with buffer): %s', str(osm_bbox_buffered))
         self.bbox = osm_bbox_buffered
-
-        #city_bbox_buffered_geo = conf['project_projection'].project_box(city_bbox_buffered, rev=True)
-        #print 'city_bbox_buffered_geo:', city_bbox_buffered_geo
         self.log_end_task()
 
 
@@ -232,7 +246,7 @@ class Match(object):
                 clip_rect=self.bbox, 
                 srs=self.srs,
                 target_proj=self.proj4text)
-        osm_data.write_geojson(out_fname) # .osm.geojson
+        osm_data.write_geojson(out_fname) # .geojson
         if self.db: 
             self.db.write_geo(osm_data, name+'_ways',geometry_type='LineString')
             self.db.write_geo(osm_data, name+'_nodes',geometry_type='Point')
