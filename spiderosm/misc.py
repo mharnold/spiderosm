@@ -12,6 +12,8 @@ import urllib
 import urllib2
 import zipfile
 
+import log
+
 def percent(num,of):
     '''compute percent, avoiding divide by zero, round to integer'''
     if of==0: return 0
@@ -45,7 +47,7 @@ def unzip(Filename):
         assert not '//' in dirname
         assert not '\\' in dirname
         if dirname=='': dirname='.'
-        print "Decompressing " + filename + " on " + dirname
+        log.info("Decompressing %s in %s", filename, dirname)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
         zfile.extract(name, dirname)
@@ -113,10 +115,10 @@ def update_file_from_url(filename,url,gzip=False):
     # get size of url content
     url_size1 = url_size(url)
 
-    print 'file_size', file_size
-    print 'url_size', url_size1
+    #print 'file_size', file_size
+    #print 'url_size', url_size1
     if file_size != url_size1:
-        print 'Downloading: %s to %s' % (url,filename)
+        log.info('Downloading: %s to %s', url, filename)
         retrieve_url(url,filename,gzip=gzip)
 
 def _test_percent():

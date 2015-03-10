@@ -15,10 +15,25 @@ def _match_city():
 
     # dirs
     project = 'portland'
-    gis_data_dir = spiderosm.config.settings.get('gis_data_dir', 'data')
-    out_dir = spiderosm.config.settings.get('out_dir', os.path.join('data',project))
-    spiderosm.log.info('gis_data_dir=%s out_dir=%s', gis_data_dir, out_dir)
-    
+    gis_data_dir = spiderosm.config.settings.get('gis_data_dir', 
+            'data')
+    out_dir = spiderosm.config.settings.get('out_dir', 
+            os.path.join('data',project))
+    log_file = spiderosm.config.settings.get('log_file',
+            os.path.join(out_dir,'log.txt'))
+
+    # make sure out_dir exists
+    if not os.path.exists(out_dir): os.makedirs(out_dir)
+
+    # logging
+    print 'Logging to:', log_file
+    spiderosm.log.config(filename=log_file)
+    spiderosm.config.log_settings()
+    spiderosm.log.info('gis_data_dir=%s out_dir=%s, log_file=%s',
+        gis_data_dir, 
+        out_dir,
+        log_file)
+
     # bounding box
     # if bbox set to None, city data bounding box plus a buffer is used.
     # approximately portland city boundary, with 1 mile buffer.
@@ -37,9 +52,6 @@ def _match_city():
             postgis_srid=spiderosm.config.settings.get('postgis_srid')
             )
     spiderosm.log.info('srs info:\n%s', srs.info())
-
-    # make sure out_dir exists
-    if not os.path.exists(out_dir): os.makedirs(out_dir)
 
     # if a database is enabled write output to it too
     if  spiderosm.config.settings.get('postgis_enabled'):

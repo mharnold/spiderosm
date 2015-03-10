@@ -73,7 +73,8 @@ def test():
 
 #on load
 _get_info()
-log.config(version=info['version'])
+#force=False means don't override log configurations that may have been set by user of spiderosm library.
+log.config(version=info['version'],force=False)
 _default_settings()
 read_config_files()
 

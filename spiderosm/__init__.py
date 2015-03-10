@@ -14,4 +14,3 @@ LICENSE = config.info['license']
 HOMEPAGE = config.info['homepage']
 
 crashhandling.init()
-config.log_settings()
